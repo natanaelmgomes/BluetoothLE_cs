@@ -39,15 +39,15 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                     <StackPanel x:Name="FooterPanel" Orientation="Vertical" RelativePanel.AlignBottomWithPanel="True">
-                        <Image Source="Assets/tiny_rugr_logoen_rood_rgb.jpg" AutomationProperties.Name="RUG Logo" Stretch="None" HorizontalAlignment="Left" Margin="10,0,0,0"/>
-                        <TextBlock x:Name="Copyright" Text="&#xA9; Microsoft Corporation. All rights reserved." Style="{StaticResource CopyrightTextStyle}"
+                        <Image Source="Assets\tiny_rugr_logoen_rood_rgb.png" AutomationProperties.Name="RUG Logo" Stretch="None" HorizontalAlignment="Left" Margin="10,0,0,0"/>
+                        <TextBlock x:Name="Copyright" Text="University of Groningen" Style="{StaticResource CopyrightTextStyle}"
                                    RelativePanel.Above="LinksPanel" Margin="10,10,0,0"
                                    TextWrapping="Wrap"/>
                         <StackPanel x:Name="LinksPanel" Orientation="Horizontal" Margin="10,10,0,10">
-                            <HyperlinkButton Content="Trademarks" Tag="http://go.microsoft.com/fwlink/?LinkID=623755"
+                            <HyperlinkButton Content="Visit" Tag="rug.nl"
                         Click="Footer_Click" FontSize="12" Style="{StaticResource HyperlinkStyle}" />
                             <TextBlock Text="|"  Style="{StaticResource SeparatorStyle}" VerticalAlignment="Center" />
-                            <HyperlinkButton x:Name="PrivacyLink" Content="Privacy" Tag="http://privacy.microsoft.com" Click="Footer_Click" FontSize="12" Style="{StaticResource HyperlinkStyle}"/>
+                            <HyperlinkButton x:Name="PrivacyLink" Content="Dev" Tag="github.com/natanaelmgomes" Click="Footer_Click" FontSize="12" Style="{StaticResource HyperlinkStyle}"/>
                         </StackPanel>
                     </StackPanel>
                 </RelativePanel>

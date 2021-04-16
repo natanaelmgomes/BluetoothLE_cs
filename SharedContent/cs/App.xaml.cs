@@ -100,7 +100,7 @@ namespace SDKTemplate
                 // Set the default language
                 rootFrame.Language = Windows.Globalization.ApplicationLanguages.Languages[0];
                 rootFrame.NavigationFailed += OnNavigationFailed;
-                
+
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
             }

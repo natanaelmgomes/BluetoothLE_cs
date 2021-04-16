@@ -15,7 +15,6 @@ using Windows.UI.Core;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Automation.Peers;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Data;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Navigation;
 
@@ -136,13 +135,13 @@ namespace SDKTemplate
                 StatusPanel.Visibility = Visibility.Collapsed;
             }
 
-			// Raise an event if necessary to enable a screen reader to announce the status update.
-			var peer = FrameworkElementAutomationPeer.FromElement(StatusBlock);
-			if (peer != null)
-			{
-				peer.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
-			}
-		}
+            // Raise an event if necessary to enable a screen reader to announce the status update.
+            var peer = FrameworkElementAutomationPeer.FromElement(StatusBlock);
+            if (peer != null)
+            {
+                peer.RaiseAutomationEvent(AutomationEvents.LiveRegionChanged);
+            }
+        }
 
         async void Footer_Click(object sender, RoutedEventArgs e)
         {
