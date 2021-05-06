@@ -481,6 +481,7 @@ namespace GenericBLESensor
             }
             else if (data != null)
             {
+
                 // We don't know what format to use. Let's try some well-known profiles, or default back to UTF-8.
                 if (selectedCharacteristic.Uuid.Equals(GattCharacteristicUuids.HeartRateMeasurement))
                 {
@@ -506,7 +507,23 @@ namespace GenericBLESensor
                         return "Battery Level: (unable to parse)";
                     }
                 }
-                // This is our custom calc service Result UUID. Format it like an Int
+
+                // This is the custom service Sensor1 UUID. Format it like an Int16
+                else if (selectedCharacteristic.Uuid.Equals(Constants.GenericSensor1CharacteristicUuid))
+                {
+                    try
+                    {
+                        return BitConverter.ToInt16(data, 0).ToString() + " " +
+                               BitConverter.ToInt16(data, 2).ToString() + " " +
+                               BitConverter.ToInt16(data, 4).ToString();
+                    }
+                    catch (ArgumentException)
+                    {
+                        return BitConverter.ToInt16(data, 0).ToString();
+                    }
+                    
+                }
+                // This is the custom calc service Result UUID. Format it like an Int
                 else if (selectedCharacteristic.Uuid.Equals(Constants.ResultCharacteristicUuid))
                 {
                     return BitConverter.ToInt32(data, 0).ToString();
