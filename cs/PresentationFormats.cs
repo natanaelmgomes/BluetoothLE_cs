@@ -3,7 +3,7 @@
 // </copyright>
 //----------------------------------------------------------------------------------------------
 
-namespace SDKTemplate
+namespace GenericBLESensor
 {
     /// <summary>
     /// Class containing the details of Gatt characteristics presentation formats

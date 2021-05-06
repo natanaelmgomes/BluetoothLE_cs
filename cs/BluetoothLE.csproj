@@ -3,6 +3,17 @@
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <SharedContentDir>$([MSBuild]::GetDirectoryNameOfFileAbove($(MSBuildThisFileDirectory), LICENSE))\SharedContent</SharedContentDir>
+    <PackageCertificateThumbprint>
+    </PackageCertificateThumbprint>
+    <PackageCertificateKeyFile>BluetoothLE_TemporaryKey.pfx</PackageCertificateKeyFile>
+    <AppxPackageSigningEnabled>True</AppxPackageSigningEnabled>
+    <GenerateAppInstallerFile>False</GenerateAppInstallerFile>
+    <AppxPackageSigningTimestampDigestAlgorithm>SHA256</AppxPackageSigningTimestampDigestAlgorithm>
+    <AppxAutoIncrementPackageRevision>True</AppxAutoIncrementPackageRevision>
+    <GenerateTestArtifacts>True</GenerateTestArtifacts>
+    <AppxBundle>Always</AppxBundle>
+    <AppxBundlePlatforms>x86</AppxBundlePlatforms>
+    <HoursBetweenUpdateChecks>0</HoursBetweenUpdateChecks>
   </PropertyGroup>
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -10,7 +21,7 @@
     <ProjectGuid>{445C51F0-1B60-5DF7-8798-DC8C1F7D0C90}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>SDKTemplate</RootNamespace>
+    <RootNamespace>GenericBLESensor</RootNamespace>
     <AssemblyName>BluetoothLEUniversal</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
@@ -89,32 +100,23 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
     <UseDotNetNativeToolchain>true</UseDotNetNativeToolchain>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(SharedContentDir)\cs\App.xaml.cs">
-      <Link>App.xaml.cs</Link>
-      <DependentUpon>App.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="$(SharedContentDir)\cs\MainPage.xaml.cs">
-      <Link>MainPage.xaml.cs</Link>
-      <DependentUpon>MainPage.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="$(SharedContentDir)\cs\AssemblyInfo.cs">
-      <Link>Properties\AssemblyInfo.cs</Link>
-    </Compile>
+    <Compile Include="App.xaml.cs" />
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="DeviceHelpers.cs" />
+    <Compile Include="DispatcherTaskExtensions.cs" />
+    <Compile Include="FrameRenderer.cs" />
+    <Compile Include="MainPage.xaml.cs" />
     <Compile Include="Constants.cs" />
     <Compile Include="DisplayHelpers.cs" />
     <Compile Include="PresentationFormats.cs" />
     <Compile Include="SampleConfiguration.cs" />
-    <Compile Include="Scenario1_Discovery.xaml.cs">
-      <DependentUpon>Scenario1_Discovery.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Scenario3_ServerForeground.xaml.cs">
-      <DependentUpon>Scenario3_ServerForeground.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="Scenario2_Client.xaml.cs">
-      <DependentUpon>Scenario2_Client.xaml</DependentUpon>
-    </Compile>
+    <Compile Include="Scenario1_Discovery.xaml.cs" />
+    <Compile Include="Scenario2_Client.xaml.cs" />
+    <Compile Include="Scenario3_ServerForeground.xaml.cs" />
+    <Compile Include="Scenario4_DataVisualization.xaml.cs" />
   </ItemGroup>
   <ItemGroup>
     <AppxManifest Include="Package.appxmanifest">
@@ -122,73 +124,78 @@
     </AppxManifest>
   </ItemGroup>
   <ItemGroup>
-    <ApplicationDefinition Include="$(SharedContentDir)\xaml\App.xaml">
-      <Link>App.xaml</Link>
+    <ApplicationDefinition Include="App.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Page Include="$(SharedContentDir)\cs\MainPage.xaml">
-      <Link>MainPage.xaml</Link>
+    <Page Include="MainPage.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="..\shared\Scenario1_Discovery.xaml">
-      <Link>Scenario1_Discovery.xaml</Link>
+    <Page Include="Scenario1_Discovery.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="$(SharedContentDir)\xaml\Styles.xaml">
-      <Link>Styles\Styles.xaml</Link>
+    <Page Include="Scenario2_Client.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="..\shared\Scenario3_ServerForeground.xaml">
-      <Link>Scenario3_ServerForeground.xaml</Link>
+    <Page Include="Scenario3_ServerForeground.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
-    <Page Include="..\shared\Scenario2_Client.xaml">
-      <Link>Scenario2_Client.xaml</Link>
+    <Page Include="Scenario4_DataVisualization.xaml">
+      <Generator>MSBuild:Compile</Generator>
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Include="Styles.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="$(SharedContentDir)\cs\Default.rd.xml">
+    <Content Include="Default.rd.xml">
       <Link>Properties\Default.rd.xml</Link>
     </Content>
-    <Content Include="$(SharedContentDir)\media\microsoft-sdk.png">
+    <Content Include="media\microsoft-sdk.png">
       <Link>Assets\microsoft-sdk.png</Link>
     </Content>
-    <Content Include="$(SharedContentDir)\media\smalltile-sdk.png">
+    <Content Include="media\smalltile-sdk.png">
       <Link>Assets\smallTile-sdk.png</Link>
     </Content>
-    <Content Include="$(SharedContentDir)\media\splash-sdk.png">
+    <Content Include="media\splash-sdk.png">
       <Link>Assets\splash-sdk.png</Link>
     </Content>
-    <Content Include="$(SharedContentDir)\media\squaretile-sdk.png">
+    <Content Include="media\squaretile-sdk.png">
       <Link>Assets\squareTile-sdk.png</Link>
     </Content>
-    <Content Include="$(SharedContentDir)\media\storelogo-sdk.png">
+    <Content Include="media\storelogo-sdk.png">
       <Link>Assets\storeLogo-sdk.png</Link>
     </Content>
-    <Content Include="$(SharedContentDir)\media\tile-sdk.png">
+    <Content Include="media\tile-sdk.png">
       <Link>Assets\tile-sdk.png</Link>
     </Content>
-    <Content Include="$(SharedContentDir)\media\windows-sdk.png">
+    <Content Include="media\windows-sdk.png">
       <Link>Assets\windows-sdk.png</Link>
     </Content>
+    <Content Include="tiny_rugr_logoen_rood_rgb.png" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.NETCore.UniversalWindowsPlatform">
       <Version>5.0.0</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <None Include="BluetoothLE_TemporaryKey.pfx" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Microsoft\WindowsXaml\v$(VisualStudioVersion)\Microsoft.Windows.UI.Xaml.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it.
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">
   </Target>

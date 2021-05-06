@@ -31,7 +31,7 @@ namespace GenericBLESensor
     // with an unknown service with unknown characteristics.
     // In practice, your app will be interested in a specific service with
     // a specific characteristic.
-    public sealed partial class Scenario2_Client : Page
+    public sealed partial class Scenario4_DataVisualization : Page
     {
         private MainPage rootPage = MainPage.Current;
 
@@ -50,7 +50,7 @@ namespace GenericBLESensor
         #endregion
 
         #region UI Code
-        public Scenario2_Client()
+        public Scenario4_DataVisualization()
         {
             InitializeComponent();
         }
