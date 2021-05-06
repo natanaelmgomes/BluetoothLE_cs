@@ -33,6 +33,7 @@ namespace GenericBLESensor
     // a specific characteristic.
     public sealed partial class Scenario4_DataVisualization : Page
     {
+        //private CSVHelperClass CSVHelperObj;
         private MainPage rootPage = MainPage.Current;
 
         private BluetoothLEDevice bluetoothLeDevice = null;
@@ -288,6 +289,7 @@ namespace GenericBLESensor
 
         private async void CharacteristicReadButton_Click()
         {
+            //_ = CSVHelperObj.CreateCSVFile();
             // BT_Code: Read the actual value from the device by using Uncached.
             GattReadResult result = await selectedCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
             if (result.Status == GattCommunicationStatus.Success)
