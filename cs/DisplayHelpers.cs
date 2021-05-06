@@ -23,6 +23,10 @@ namespace GenericBLESensor
                     return serviceName.ToString();
                 }
             }
+            if (service.Uuid == Constants.GenericSensorServiceUuid)
+            {
+                return "Sensor Data";
+            }
             return "Custom Service: " + service.Uuid;
         }
 
@@ -41,6 +45,11 @@ namespace GenericBLESensor
             if (!string.IsNullOrEmpty(characteristic.UserDescription))
             {
                 return characteristic.UserDescription;
+            }
+        
+            if (characteristic.Uuid == Constants.GenericSensor1CharacteristicUuid)
+            {
+                return "Sensor 1";
             }
 
             else
