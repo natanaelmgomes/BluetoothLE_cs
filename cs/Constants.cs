@@ -42,6 +42,9 @@ namespace GenericBLESensor
         public static readonly Guid GenericSensorServiceUuid = Guid.Parse("a7ea14cf-0000-43ba-ab86-1d6e136a2e9e");
         public static readonly Guid GenericSensor1CharacteristicUuid = Guid.Parse("a7ea14cf-0001-43ba-ab86-1d6e136a2e9e");
 
+        public static readonly Guid RightFootSensorServiceUuid = Guid.Parse("a7ea14cf-0010-43ba-ab86-1d6e136a2e9e");
+        public static readonly Guid RightFootSensorCharacteristicUuid = Guid.Parse("a7ea14cf-0011-43ba-ab86-1d6e136a2e9e");
+
 
     };
 }

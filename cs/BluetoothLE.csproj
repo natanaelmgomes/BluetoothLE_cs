@@ -112,7 +112,7 @@
     <Compile Include="FrameRenderer.cs" />
     <Compile Include="MainPage.xaml.cs" />
     <Compile Include="Constants.cs" />
-    <Compile Include="CSVHelperClass.cs" />
+    <Compile Include="CSVHelper.cs" />
     <Compile Include="DisplayHelpers.cs" />
     <Compile Include="PresentationFormats.cs" />
     <Compile Include="SampleConfiguration.cs" />

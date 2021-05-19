@@ -33,11 +33,14 @@ namespace GenericBLESensor
     // a specific characteristic.
     public sealed partial class Scenario4_DataVisualization : Page
     {
-        private CSVHelperClass CSVHelperObj = new CSVHelperClass();
+        private CSVHelper CSVHelperObj = new CSVHelper();
         private MainPage rootPage = MainPage.Current;
 
         private BluetoothLEDevice bluetoothLeDevice = null;
         private GattCharacteristic selectedCharacteristic;
+
+        GattDeviceService rightFootService;
+        GattCharacteristic rightFootCharacteristic;
 
         // Only one registered characteristic at a time.
         private GattCharacteristic registeredCharacteristic;
@@ -58,11 +61,15 @@ namespace GenericBLESensor
 
         protected override void OnNavigatedTo(NavigationEventArgs e)
         {
-            SelectedDeviceRun.Text = rootPage.SelectedBleDeviceName;
+            //SelectedDeviceRun.Text = rootPage.SelectedBleDeviceName;
+            SelectedDeviceRun.Text = "Disconnected";
+
             if (string.IsNullOrEmpty(rootPage.SelectedBleDeviceId))
             {
-                ConnectButton.IsEnabled = false;
+                ConnectButton.IsEnabled = true;
             }
+
+
         }
 
         protected override async void OnNavigatedFrom(NavigationEventArgs e)
@@ -111,7 +118,8 @@ namespace GenericBLESensor
             try
             {
                 // BT_Code: BluetoothLEDevice.FromIdAsync must be called from a UI thread because it may prompt for consent.
-                bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(rootPage.SelectedBleDeviceId);
+                //bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(rootPage.SelectedBleDeviceId); "BluetoothLE#BluetoothLE74:40:bb:fe:e8:16-c1:81:6b:98:16:1f"
+                bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync("BluetoothLE#BluetoothLE74:40:bb:fe:e8:16-c1:81:6b:98:16:1f"); 
 
                 if (bluetoothLeDevice == null)
                 {
@@ -129,17 +137,63 @@ namespace GenericBLESensor
                 // BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
                 // If the services supported by the device are expected to change during BT usage, subscribe to the GattServicesChanged event.
                 GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached);
+                
 
                 if (result.Status == GattCommunicationStatus.Success)
                 {
                     var services = result.Services;
-                    rootPage.NotifyUser(String.Format("Found {0} services", services.Count), NotifyType.StatusMessage);
+                    rootPage.NotifyUser("Successfully connected", NotifyType.StatusMessage);
                     foreach (var service in services)
                     {
                         ServiceList.Items.Add(new ComboBoxItem { Content = DisplayHelpers.GetServiceName(service), Tag = service });
+
+                        var zzz = service.Uuid;
+
+                        if (service.Uuid == Constants.RightFootSensorServiceUuid)
+                        {
+                            rightFootService = service;
+                            break;
+                        }
                     }
                     ConnectButton.Visibility = Visibility.Collapsed;
-                    ServiceList.Visibility = Visibility.Visible;
+                    ServiceList.Visibility = Visibility.Collapsed;
+
+                    // From characteristics listing:
+                    IReadOnlyList<GattCharacteristic> characteristics = null;
+                    var accessStatus = await rightFootService.RequestAccessAsync();
+                    if (accessStatus == DeviceAccessStatus.Allowed)
+                    {
+                        // BT_Code: Get all the child characteristics of a service. Use the cache mode to specify uncached characterstics only 
+                        // and the new Async functions to get the characteristics of unpaired devices as well. 
+                        var result2 = await rightFootService.GetCharacteristicsAsync(BluetoothCacheMode.Uncached);
+                        if (result2.Status == GattCommunicationStatus.Success)
+                        {
+                            characteristics = result2.Characteristics;
+                            foreach (GattCharacteristic c in characteristics)
+                            {
+                                CharacteristicList.Items.Add(new ComboBoxItem { Content = DisplayHelpers.GetCharacteristicName(c), Tag = c });
+                                if (c.Uuid == Constants.RightFootSensorCharacteristicUuid)
+                                {
+                                    rightFootCharacteristic = c;
+                                    break;
+                                }
+
+                            }
+                            ValueChangedSubscribeToggle.IsEnabled = true;
+                            ValueChangedSubscribeToggle.Visibility = Visibility.Visible;
+                            ValueChangedSubscribeToggle.Content = "Start";
+                            selectedCharacteristic = rightFootCharacteristic;
+                            SelectedDeviceRun.Text = "Connected";
+                        }
+                        else
+                        {
+                            rootPage.NotifyUser("Error accessing service.", NotifyType.ErrorMessage);
+
+                        }
+                        
+
+                    }
+
                 }
                 else
                 {
@@ -208,7 +262,7 @@ namespace GenericBLESensor
 
         private void AddValueChangedHandler()
         {
-            ValueChangedSubscribeToggle.Content = "Unsubscribe from value changes";
+            ValueChangedSubscribeToggle.Content = "Stop";
             if (!subscribedForNotifications)
             {
                 registeredCharacteristic = selectedCharacteristic;
@@ -219,7 +273,7 @@ namespace GenericBLESensor
 
         private void RemoveValueChangedHandler()
         {
-            ValueChangedSubscribeToggle.Content = "Subscribe to value changes";
+            ValueChangedSubscribeToggle.Content = "Start";
             if (subscribedForNotifications)
             {
                 registeredCharacteristic.ValueChanged -= Characteristic_ValueChanged;
@@ -231,6 +285,10 @@ namespace GenericBLESensor
         private async void CharacteristicList_SelectionChanged()
         {
             selectedCharacteristic = (GattCharacteristic)((ComboBoxItem)CharacteristicList.SelectedItem)?.Tag;
+
+            var zzz = ((ComboBoxItem)CharacteristicList.SelectedItem);
+            var zzz2tag = zzz.Tag;
+
             if (selectedCharacteristic == null)
             {
                 EnableCharacteristicPanels(GattCharacteristicProperties.None);
@@ -289,8 +347,7 @@ namespace GenericBLESensor
 
         private async void CharacteristicReadButton_Click()
         {
-            _ = await Task.Run(() => _ = CSVHelperObj.CreateCSVFileAsync());
-            
+                       
             
             // BT_Code: Read the actual value from the device by using Uncached.
             GattReadResult result = await selectedCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
@@ -380,6 +437,7 @@ namespace GenericBLESensor
         {
             if (!subscribedForNotifications)
             {
+                
                 // initialize status
                 GattCommunicationStatus status = GattCommunicationStatus.Unreachable;
                 var cccdValue = GattClientCharacteristicConfigurationDescriptorValue.None;
@@ -401,8 +459,9 @@ namespace GenericBLESensor
 
                     if (status == GattCommunicationStatus.Success)
                     {
+                        rootPage.NotifyUser("Receiving data from sensor", NotifyType.StatusMessage);
+                        //_ = await Task.Run(() => _ = CSVHelperObj.CreateCSVFileAsync());
                         AddValueChangedHandler();
-                        rootPage.NotifyUser("Successfully subscribed for value changes", NotifyType.StatusMessage);
                     }
                     else
                     {
@@ -429,11 +488,12 @@ namespace GenericBLESensor
                     {
                         subscribedForNotifications = false;
                         RemoveValueChangedHandler();
-                        rootPage.NotifyUser("Successfully un-registered for notifications", NotifyType.StatusMessage);
+                        await CSVHelperObj.SaveTempCSVAsync();
+                        rootPage.NotifyUser("Successfully saved file", NotifyType.StatusMessage);
                     }
                     else
                     {
-                        rootPage.NotifyUser($"Error un-registering for notifications: {result}", NotifyType.ErrorMessage);
+                        rootPage.NotifyUser($"Error: {result}", NotifyType.ErrorMessage);
                     }
                 }
                 catch (UnauthorizedAccessException ex)
@@ -448,7 +508,8 @@ namespace GenericBLESensor
         {
             // BT_Code: An Indicate or Notify reported that the value has changed.
             // Display the new value with a timestamp.
-            var newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
+            string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
+            _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue));
             var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {newValue}";
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                 () => CharacteristicLatestValue.Text = message);
@@ -513,12 +574,12 @@ namespace GenericBLESensor
                 }
 
                 // This is the custom service Sensor1 UUID. Format it like an Int16
-                else if (selectedCharacteristic.Uuid.Equals(Constants.GenericSensor1CharacteristicUuid))
+                else if (selectedCharacteristic.Uuid.Equals(Constants.RightFootSensorCharacteristicUuid))
                 {
                     try
                     {
-                        return BitConverter.ToInt16(data, 0).ToString() + " " +
-                               BitConverter.ToInt16(data, 2).ToString() + " " +
+                        return BitConverter.ToInt16(data, 0).ToString() + ", " +
+                               BitConverter.ToInt16(data, 2).ToString() + ", " +
                                BitConverter.ToInt16(data, 4).ToString();
                     }
                     catch (ArgumentException)
