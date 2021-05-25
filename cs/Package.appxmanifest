@@ -9,7 +9,7 @@
     <Identity
       Name="BluetoothLE.CS"
       Publisher="CN=Natanael"
-      Version="1.0.3.0" />
+      Version="1.0.4.0" />
 
     <mp:PhoneIdentity PhoneProductId="a2214a83-6d31-41dd-b75f-0b8e56be182d" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -32,10 +32,10 @@
           Executable="$targetnametoken$.exe"
           EntryPoint="BluetoothLE.App">
             <uap:VisualElements
-              DisplayName="Bluetooth Low Energy"
+              DisplayName="Bluetooth Shoes Sensoring"
               Square150x150Logo="Assets\squareTile-sdk.png"
               Square44x44Logo="Assets\SmallTile-sdk.png"
-              Description="Bluetooth Low Energy C# application for generic sensor reading."
+              Description="Bluetooth Low Energy C# application for sole shoes sensor reading."
               BackgroundColor="#00b2f0">
                 <uap:SplashScreen Image="Assets\Splash-sdk.png" />
                 <uap:DefaultTile>
