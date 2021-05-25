@@ -39,7 +39,7 @@
                         </ListBox.ItemTemplate>
                     </ListBox>
                     <StackPanel x:Name="FooterPanel" Orientation="Vertical" RelativePanel.AlignBottomWithPanel="True">
-                        <Image Source="tiny_rugr_logoen_rood_rgb.png" AutomationProperties.Name="Microsoft Logo" Stretch="None" HorizontalAlignment="Left" Margin="10,0,0,0"/>
+                        <Image Source="tiny_rugr_logoen_rood_rgb.png" AutomationProperties.Name="Logo" Stretch="None" HorizontalAlignment="Left" Margin="10,0,0,0"/>
                         <!--TextBlock x:Name="Copyright" Text="&#xA9; Microsoft Corporation. All rights reserved." Style="{StaticResource CopyrightTextStyle}" -->
                         <TextBlock x:Name="Copyright" Text="University of Groningen" Style="{StaticResource CopyrightTextStyle}"
                             RelativePanel.Above="LinksPanel" Margin="10,10,0,0"

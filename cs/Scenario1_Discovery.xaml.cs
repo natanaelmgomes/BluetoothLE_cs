@@ -172,6 +172,7 @@ namespace GenericBLESensor
                         // Make sure device isn't already present in the list.
                         if (FindBluetoothLEDeviceDisplay(deviceInfo.Id) == null)
                         {
+
                             if (deviceInfo.Name != string.Empty)
                             {
                                 // If device has a friendly name display it immediately.

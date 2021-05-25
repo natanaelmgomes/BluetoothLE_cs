@@ -90,6 +90,8 @@
     <ErrorReport>prompt</ErrorReport>
     <Prefer32Bit>true</Prefer32Bit>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <EnableGatekeeperAnalysis>true</EnableGatekeeperAnalysis>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
@@ -181,6 +183,11 @@
     <Content Include="media\windows-sdk.png">
       <Link>Assets\windows-sdk.png</Link>
     </Content>
+    <Content Include="StoreLogo-sdk.scale-100.png" />
+    <Content Include="StoreLogo-sdk.scale-125.png" />
+    <Content Include="StoreLogo-sdk.scale-150.png" />
+    <Content Include="StoreLogo-sdk.scale-200.png" />
+    <Content Include="StoreLogo-sdk.scale-400.png" />
     <Content Include="tiny_rugr_logoen_rood_rgb.png" />
   </ItemGroup>
   <ItemGroup>
