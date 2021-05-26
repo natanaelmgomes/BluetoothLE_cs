@@ -524,7 +524,10 @@ namespace GenericBLESensor
                 {
                     try
                     {
-                        return "Unknown format: " + Encoding.UTF8.GetString(data);
+                        //return "Unknown format: " + Encoding.UTF8.GetString(data);
+                        return BitConverter.ToInt16(data, 0).ToString() + ", " +
+                               BitConverter.ToInt16(data, 2).ToString() + ", " +
+                               BitConverter.ToInt16(data, 4).ToString();
                     }
                     catch (ArgumentException)
                     {

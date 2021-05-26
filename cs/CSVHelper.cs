@@ -31,6 +31,7 @@ namespace GenericBLESensor
         public class CSVDataFrame
         {
             public int Id { get; set; }
+            public long TimeStamp { get; set; }
             public int A { get; set; }
             public int B { get; set; }
             public int C { get; set; }
@@ -92,7 +93,7 @@ namespace GenericBLESensor
         //    return 0;
         //}
 
-        public int SaveData(Int16[] values, string side)
+        public int SaveData(Int16[] values, string side, DateTimeOffset milliseconds)
         {
             //List<CSVDataFrame> records = new List<CSVDataFrame> { };
             //using (var writer = new StreamWriter(new FileStream("C:\\Users\\natan\\temp.csv", FileMode.Create), Encoding.UTF8))
@@ -107,6 +108,7 @@ namespace GenericBLESensor
             if (side == "left")
             {
                 FirstLeft = true;
+                
 
                 temp = new CSVDataFrame
                 {
@@ -119,9 +121,11 @@ namespace GenericBLESensor
             else if (side == "right")
             {
                 FirstRight = true;
+                long timestamp = milliseconds.ToUnixTimeMilliseconds();
                 temp = new CSVDataFrame
                 {
                     Id = RightIdtag++,
+                    TimeStamp = timestamp,
                     A = values[0],
                     B = values[1],
                     C = values[2]
@@ -178,6 +182,7 @@ namespace GenericBLESensor
                 CSVDataFrame temp = new CSVDataFrame
                 {
                     Id = i,
+                    TimeStamp = RightDataReceived[i].TimeStamp,
                     A = LeftDataReceived[i].A,
                     B = LeftDataReceived[i].B,
                     C = LeftDataReceived[i].C,
@@ -194,18 +199,19 @@ namespace GenericBLESensor
             string pathtofile = storageFolder.Path;
             rootPage.NotifyUser($"Saving to: {pathtofile}", NotifyType.StatusMessage);
             file = await storageFolder.CreateFileAsync(tempFilename + " temp.csv", CreationCollisionOption.ReplaceExisting);
-            await FileIO.WriteTextAsync(file, "ID, A, B, C" + Environment.NewLine);
-            string fileBody = "ID, A, B, C" + Environment.NewLine;
+            //await FileIO.WriteTextAsync(file, "ID, A, B, C" + Environment.NewLine);
+            string fileBody = "ID, TimeStamp, A, B, C, D, E, F" + Environment.NewLine;
 
 
             foreach (var row in DataReceived)
             {
-                fileBody = fileBody + row.Id.ToString() + ", " + 
-                                      row.A.ToString()  + ", " +
-                                      row.B.ToString()  + ", " + 
-                                      row.C.ToString() + ", " +
-                                      row.D.ToString() + ", " +
-                                      row.E.ToString() + ", " +
+                fileBody = fileBody + row.Id.ToString()        + ", " +
+                                      row.TimeStamp.ToString() + ", " +
+                                      row.A.ToString()         + ", " +
+                                      row.B.ToString()         + ", " + 
+                                      row.C.ToString()         + ", " +
+                                      row.D.ToString()         + ", " +
+                                      row.E.ToString()         + ", " +
                                       row.F.ToString()  + Environment.NewLine;
             }
 
