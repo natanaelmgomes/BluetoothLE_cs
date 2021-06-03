@@ -42,6 +42,7 @@ namespace GenericBLESensor
         private BluetoothLEDevice bluetoothLeDevice1 = null;
         private BluetoothLEDevice bluetoothLeDevice2 = null;
         private BluetoothLEDevice bluetoothLeDevice3 = null;
+        private BluetoothLEDevice bluetoothLeDevice4 = null;
         private BluetoothLEDevice bluetoothLeDeviceLeft = null;
         private BluetoothLEDevice bluetoothLeDeviceRight = null;
         //private GattCharacteristic selectedCharacteristic;
@@ -162,12 +163,14 @@ namespace GenericBLESensor
             bluetoothLeDevice1?.Dispose();
             bluetoothLeDevice2?.Dispose();
             bluetoothLeDevice3?.Dispose();
+            bluetoothLeDevice4?.Dispose();
             if (!(JustRightFoot)) { bluetoothLeDeviceLeft?.Dispose(); }
             bluetoothLeDeviceRight?.Dispose();
 
             bluetoothLeDevice1 = null;
             bluetoothLeDevice2 = null;
             bluetoothLeDevice3 = null;
+            bluetoothLeDevice4 = null;
             if (!(JustRightFoot)) { bluetoothLeDeviceLeft = null; }
             bluetoothLeDeviceRight = null;
             return true;
@@ -193,17 +196,23 @@ namespace GenericBLESensor
                 //bluetoothLeDevice = await BluetoothLEDevice.FromIdAsync(rootPage.SelectedBleDeviceId);
 
                 // NRF52DK
-                // "BluetoothLE#BluetoothLE74:40:bb:fe:e8:16-e7:a6:c8:a0:67:41"
+                // e7:a6:c8:a0:67:41
 
                 // Feather COM5
-                // "BluetoothLE#BluetoothLE74:40:bb:fe:e8:16-ec:f2:a6:8f:51:d7"
+                // ec:f2:a6:8f:51:d7
 
                 // Feather COM6
-                // "BluetoothLE#BluetoothLE74:40:bb:fe:e8:16-c1:81:6b:98:16:1f"
+                // c1:81:6b:98:16:1f
+
+                // Feather 
+                // 0x0000dea8d0bd1a47
+                //
 
                 bluetoothLeDevice1 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xe7a6c8a06741);
                 bluetoothLeDevice2 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xecf2a68f51d7);
                 bluetoothLeDevice3 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xc1816b98161f);
+                bluetoothLeDevice4 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xdea8d0bd1a47);
+
 
                 if (bluetoothLeDevice1 != null)
                 {
@@ -237,6 +246,17 @@ namespace GenericBLESensor
                     else if (bluetoothLeDevice3.Name == "Right Foot Sensor")
                     {
                         bluetoothLeDeviceRight = bluetoothLeDevice3;
+                    }
+                }
+                if (bluetoothLeDevice4 != null)
+                {
+                    if (bluetoothLeDevice4.Name == "Left Foot Sensor")
+                    {
+                        bluetoothLeDeviceLeft = bluetoothLeDevice4;
+                    }
+                    else if (bluetoothLeDevice4.Name == "Right Foot Sensor")
+                    {
+                        bluetoothLeDeviceRight = bluetoothLeDevice4;
                     }
                 }
                 if ( (bluetoothLeDeviceLeft == null) && (bluetoothLeDeviceRight != null) )
