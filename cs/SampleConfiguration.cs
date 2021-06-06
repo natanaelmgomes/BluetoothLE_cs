@@ -26,7 +26,7 @@ namespace GenericBLESensor
             new Scenario() { Title="Generic: Discover ", ClassType=typeof(Scenario1_Discovery) },
             new Scenario() { Title="Generic: Connect ", ClassType=typeof(Scenario2_Client) },
             //new Scenario() { Title="Server: Publish foreground", ClassType=typeof(Scenario3_ServerForeground) },
-            new Scenario() { Title="Shoes Sensors", ClassType=typeof(Scenario4_DataVisualization) },
+            new Scenario() { Title="Flow Sensors", ClassType=typeof(Scenario4_DataVisualization) },
         };
 
         public string SelectedBleDeviceId;

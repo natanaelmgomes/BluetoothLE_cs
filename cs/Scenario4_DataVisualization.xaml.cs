@@ -43,15 +43,14 @@ namespace GenericBLESensor
         private BluetoothLEDevice bluetoothLeDevice2 = null;
         private BluetoothLEDevice bluetoothLeDevice3 = null;
         private BluetoothLEDevice bluetoothLeDevice4 = null;
-        private BluetoothLEDevice bluetoothLeDeviceLeft = null;
-        private BluetoothLEDevice bluetoothLeDeviceRight = null;
+        private BluetoothLEDevice bluetoothLeDevice;
         //private GattCharacteristic selectedCharacteristic;
 
-        GattDeviceService rightFootService;
-        GattCharacteristic rightFootCharacteristic;
+        GattDeviceService flowService;
+        GattCharacteristic flowCharacteristic;
 
-        GattDeviceService leftFootService;
-        GattCharacteristic leftFootCharacteristic;
+        //GattDeviceService leftFootService;
+        //GattCharacteristic leftFootCharacteristic;
 
         private DeviceWatcher deviceWatcher;
 
@@ -60,7 +59,7 @@ namespace GenericBLESensor
         private GattPresentationFormat presentationFormat;
 
         Int16[] ValuesToShow;
-        bool JustRightFoot = false;
+        //bool JustRightFoot = false;
 
         #region Error Codes
         readonly int E_BLUETOOTH_ATT_WRITE_NOT_PERMITTED = unchecked((int)0x80650003);
@@ -106,53 +105,26 @@ namespace GenericBLESensor
             {
                 // Need to clear the CCCD from the remote device so we stop receiving notifications
 
-                GattCommunicationStatus resultLeft = GattCommunicationStatus.Unreachable;
-                if (!(JustRightFoot))
-                {
-                    resultLeft = await leftFootCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.None);
-                    if (resultLeft != GattCommunicationStatus.Success)
-                    {
-                        return false;
-                    }
-                    else
-                    {
-                        leftFootCharacteristic.ValueChanged -= LeftCharacteristic_ValueChanged;
-                        //subscribedForNotifications = false;
-                    }
-                }
-
-                GattCommunicationStatus resultRight = await rightFootCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.None);
-                if (resultRight != GattCommunicationStatus.Success)
+                GattCommunicationStatus result = GattCommunicationStatus.Unreachable;
+                result = await flowCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.None);
+                if (result != GattCommunicationStatus.Success)
                 {
                     return false;
                 }
                 else
                 {
-                    rightFootCharacteristic.ValueChanged -= RightCharacteristic_ValueChanged;
+                    flowCharacteristic.ValueChanged -= FlowCharacteristic_ValueChanged;
                     //subscribedForNotifications = false;
                 }
 
-                if ((JustRightFoot))
+                if (result != GattCommunicationStatus.Success)
                 {
-                    if (resultRight != GattCommunicationStatus.Success)
-                    {
-                        subscribedForNotifications = false;
-                    }
-                    else
-                    {
-                        throw new Exception("Error with cleaning.");
-                    }
+                    subscribedForNotifications = false;
                 }
                 else
                 {
-                    if ((resultLeft != GattCommunicationStatus.Success) && (resultRight != GattCommunicationStatus.Success))
-                    {
-                        subscribedForNotifications = false;
-                    }
-                    else
-                    {
-                        throw new Exception("Error with cleaning.");
-                    }
+                    rootPage.NotifyUser("Error with cleaning.", NotifyType.ErrorMessage);
+                    //throw new Exception("Error with cleaning.");
                 }
 
 
@@ -164,15 +136,12 @@ namespace GenericBLESensor
             bluetoothLeDevice2?.Dispose();
             bluetoothLeDevice3?.Dispose();
             bluetoothLeDevice4?.Dispose();
-            if (!(JustRightFoot)) { bluetoothLeDeviceLeft?.Dispose(); }
-            bluetoothLeDeviceRight?.Dispose();
+            bluetoothLeDevice?.Dispose();
 
             bluetoothLeDevice1 = null;
             bluetoothLeDevice2 = null;
             bluetoothLeDevice3 = null;
             bluetoothLeDevice4 = null;
-            if (!(JustRightFoot)) { bluetoothLeDeviceLeft = null; }
-            bluetoothLeDeviceRight = null;
             return true;
         }
 
@@ -216,60 +185,37 @@ namespace GenericBLESensor
 
                 if (bluetoothLeDevice1 != null)
                 {
-                    if (bluetoothLeDevice1.Name == "Left Foot Sensor")
+                    if (bluetoothLeDevice1.Name == "Flow Sensor")
                     {
-                        bluetoothLeDeviceLeft = bluetoothLeDevice1;
-                    }
-                    else if (bluetoothLeDevice1.Name == "Right Foot Sensor")
-                    {
-                        bluetoothLeDeviceRight = bluetoothLeDevice1;
+                        bluetoothLeDevice = bluetoothLeDevice1;
                     }
                 }
                 if (bluetoothLeDevice2 != null)
                 {
-                    if (bluetoothLeDevice2.Name == "Left Foot Sensor")
+                    if (bluetoothLeDevice2.Name == "Flow Sensor")
                     {
-                        bluetoothLeDeviceLeft = bluetoothLeDevice2;
-                    }
-                    else if (bluetoothLeDevice2.Name == "Right Foot Sensor")
-                    {
-                        bluetoothLeDeviceRight = bluetoothLeDevice2;
+                        bluetoothLeDevice = bluetoothLeDevice2;
                     }
                 }
 
                 if (bluetoothLeDevice3 != null)
                 {
-                    if (bluetoothLeDevice3.Name == "Left Foot Sensor")
+                    if (bluetoothLeDevice3.Name == "Flow Sensor")
                     {
-                        bluetoothLeDeviceLeft = bluetoothLeDevice3;
-                    }
-                    else if (bluetoothLeDevice3.Name == "Right Foot Sensor")
-                    {
-                        bluetoothLeDeviceRight = bluetoothLeDevice3;
+                        bluetoothLeDevice = bluetoothLeDevice3;
                     }
                 }
                 if (bluetoothLeDevice4 != null)
                 {
-                    if (bluetoothLeDevice4.Name == "Left Foot Sensor")
+                    if (bluetoothLeDevice4.Name == "Flow Sensor")
                     {
-                        bluetoothLeDeviceLeft = bluetoothLeDevice4;
-                    }
-                    else if (bluetoothLeDevice4.Name == "Right Foot Sensor")
-                    {
-                        bluetoothLeDeviceRight = bluetoothLeDevice4;
+                        bluetoothLeDevice = bluetoothLeDevice4;
                     }
                 }
-                if ( (bluetoothLeDeviceLeft == null) && (bluetoothLeDeviceRight != null) )
+
+                if ( bluetoothLeDevice == null )
                 {
-                    rootPage.NotifyUser("Failed to connect to left sensor.", NotifyType.ErrorMessage);
-                }
-                if ( (bluetoothLeDeviceRight == null) && (bluetoothLeDeviceLeft != null) )
-                {
-                    rootPage.NotifyUser("Failed to connect to right sensor.", NotifyType.ErrorMessage);
-                }
-                if ( (bluetoothLeDeviceLeft == null) && (bluetoothLeDeviceRight == null) )
-                {
-                    rootPage.NotifyUser("Failed to connect both sensors.", NotifyType.ErrorMessage);
+                    rootPage.NotifyUser("Failed to connect to sensor.", NotifyType.ErrorMessage);
                 }
             }
             catch (Exception ex) when (ex.HResult == E_DEVICE_NOT_AVAILABLE)
@@ -279,12 +225,12 @@ namespace GenericBLESensor
 
             StopBleDeviceWatcher();
 
-            if (bluetoothLeDeviceRight != null)
+            if (bluetoothLeDevice != null)
             {
                 // Note: BluetoothLEDevice.GattServices property will return an empty list for unpaired devices. For all uses we recommend using the GetGattServicesAsync method.
                 // BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
                 // If the services supported by the device are expected to change during BT usage, subscribe to the GattServicesChanged event.
-                GattDeviceServicesResult result = await bluetoothLeDeviceRight.GetGattServicesAsync(BluetoothCacheMode.Uncached);
+                GattDeviceServicesResult result = await bluetoothLeDevice.GetGattServicesAsync(BluetoothCacheMode.Uncached);
                 if (result.Status == GattCommunicationStatus.Success)
                 {
                     var services = result.Services;
@@ -292,30 +238,30 @@ namespace GenericBLESensor
                     foreach (var service in services)
                     {
                         ServiceList.Items.Add(new ComboBoxItem { Content = DisplayHelpers.GetServiceName(service), Tag = service });
-                        if (service.Uuid == Constants.RightFootSensorServiceUuid)
+                        if (service.Uuid == Constants.flowSensorServiceUuid)
                         {
-                            rightFootService = service;
+                            flowService = service;
                             break;
                         }
                     }
 
                     // From characteristics listing:
                     IReadOnlyList<GattCharacteristic> characteristics = null;
-                    var accessStatus = await rightFootService.RequestAccessAsync();
+                    var accessStatus = await flowService.RequestAccessAsync();
                     if (accessStatus == DeviceAccessStatus.Allowed)
                     {
                         // BT_Code: Get all the child characteristics of a service. Use the cache mode to specify uncached characterstics only 
                         // and the new Async functions to get the characteristics of unpaired devices as well. 
-                        var result2 = await rightFootService.GetCharacteristicsAsync(BluetoothCacheMode.Uncached);
+                        var result2 = await flowService.GetCharacteristicsAsync(BluetoothCacheMode.Uncached);
                         if (result2.Status == GattCommunicationStatus.Success)
                         {
                             characteristics = result2.Characteristics;
                             foreach (GattCharacteristic c in characteristics)
                             {
                                 CharacteristicList.Items.Add(new ComboBoxItem { Content = DisplayHelpers.GetCharacteristicName(c), Tag = c });
-                                if (c.Uuid == Constants.RightFootSensorCharacteristicUuid)
+                                if (c.Uuid == Constants.flowSensorCharacteristicUuid)
                                 {
-                                    rightFootCharacteristic = c;
+                                    flowCharacteristic = c;
                                     break;
                                 }
                             }
@@ -332,74 +278,13 @@ namespace GenericBLESensor
                 }
             }
 
-            if ((bluetoothLeDeviceLeft != null) && !JustRightFoot)
-            {
-                // Note: BluetoothLEDevice.GattServices property will return an empty list for unpaired devices. For all uses we recommend using the GetGattServicesAsync method.
-                // BT_Code: GetGattServicesAsync returns a list of all the supported services of the device (even if it's not paired to the system).
-                // If the services supported by the device are expected to change during BT usage, subscribe to the GattServicesChanged event.
-                GattDeviceServicesResult result = await bluetoothLeDeviceLeft.GetGattServicesAsync(BluetoothCacheMode.Uncached);
-
-                if (result.Status == GattCommunicationStatus.Success)
-                {
-                    var services = result.Services;
-                    foreach (var service in services)
-                    {
-                        ServiceList.Items.Add(new ComboBoxItem { Content = DisplayHelpers.GetServiceName(service), Tag = service });
-
-                        if (service.Uuid == Constants.LeftFootSensorServiceUuid)
-                        {
-                            leftFootService = service;
-                            break;
-                        }
-                    }
-
-                    // From characteristics listing:
-                    IReadOnlyList<GattCharacteristic> characteristics = null;
-                    var accessStatus = await leftFootService.RequestAccessAsync();
-                    if (accessStatus == DeviceAccessStatus.Allowed)
-                    {
-                        // BT_Code: Get all the child characteristics of a service. Use the cache mode to specify uncached characterstics only 
-                        // and the new Async functions to get the characteristics of unpaired devices as well. 
-                        var result2 = await leftFootService.GetCharacteristicsAsync(BluetoothCacheMode.Uncached);
-                        if (result2.Status == GattCommunicationStatus.Success)
-                        {
-                            characteristics = result2.Characteristics;
-                            foreach (GattCharacteristic c in characteristics)
-                            {
-                                CharacteristicList.Items.Add(new ComboBoxItem { Content = DisplayHelpers.GetCharacteristicName(c), Tag = c });
-                                if (c.Uuid == Constants.LeftFootSensorCharacteristicUuid)
-                                {
-                                    leftFootCharacteristic = c;
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            rootPage.NotifyUser("Error accessing service.", NotifyType.ErrorMessage);
-                        }
-                    }
-                }
-                else
-                {
-                    rootPage.NotifyUser("Device unreachable", NotifyType.ErrorMessage);
-                }
-            }
-            
-            if (((leftFootCharacteristic != null) || JustRightFoot)  && (rightFootCharacteristic != null))
+           
+            if (flowCharacteristic != null)
             {
                 ValueChangedSubscribeToggle.IsEnabled = true;
                 ValueChangedSubscribeToggle.Visibility = Visibility.Visible;
                 ValueChangedSubscribeToggle.Content = "Start";
-                if (!(JustRightFoot))
-                {
-                    rootPage.NotifyUser("Connected to both sensors.", NotifyType.StatusMessage);
-                }
-                else
-                {
-                    rootPage.NotifyUser("Connected to right sensor.", NotifyType.StatusMessage);
-                }
-                
+                rootPage.NotifyUser("Connected to sensor.", NotifyType.StatusMessage);
                 SelectedDeviceRun.Text = "Connected";
             }
             ConnectButton.IsEnabled = true;
@@ -563,26 +448,20 @@ namespace GenericBLESensor
             //AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
             //    // BT_Code: Read the actual value from the device by using Uncached.
             Debug.WriteLine(String.Format($"{DateTime.Now:hh:mm:ss.FFF}"));
-            GattReadResult result = await rightFootCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
+            GattReadResult result = await flowCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
             if (result.Status == GattCommunicationStatus.Success)
             {
                 byte[] data;
-                Int16[] newValue = new Int16[3];
+                Int16 newValue;
                 CryptographicBuffer.CopyToByteArray(result.Value, out data);
-                ValuesToShow[3] = newValue[0] = BitConverter.ToInt16(data, 0);
-                ValuesToShow[4] = newValue[1] = BitConverter.ToInt16(data, 2);
-                ValuesToShow[5] = newValue[2] = BitConverter.ToInt16(data, 4);
+                ValuesToShow[0] = newValue = BitConverter.ToInt16(data, 0);
 
-                string strValues = ValuesToShow[0].ToString() + ", " +
-                                   ValuesToShow[1].ToString() + ", " +
-                                   ValuesToShow[2].ToString() + ", " +
-                                   ValuesToShow[3].ToString() + ", " +
-                                   ValuesToShow[4].ToString() + ", " +
-                                   ValuesToShow[5].ToString();
+                string strValues = ValuesToShow[0].ToString();
 
                 //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
-                _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "right", DateTimeOffset.Now));
-                var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
+                _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, DateTimeOffset.Now));
+                //var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
+                var message = $"Value: {strValues}";
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                     () => CharacteristicLatestValue.Text = message);
             }
@@ -590,102 +469,10 @@ namespace GenericBLESensor
             {
                 rootPage.NotifyUser($"Read failed: {result.Status}", NotifyType.ErrorMessage);
             }
-            if (!(JustRightFoot))
-            {
-                result = await leftFootCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-                if (result.Status == GattCommunicationStatus.Success)
-                {
-                    byte[] data;
-                    Int16[] newValue = new Int16[3];
-                    CryptographicBuffer.CopyToByteArray(result.Value, out data);
-                    ValuesToShow[0] = newValue[0] = BitConverter.ToInt16(data, 0);
-                    ValuesToShow[1] = newValue[1] = BitConverter.ToInt16(data, 2);
-                    ValuesToShow[2] = newValue[2] = BitConverter.ToInt16(data, 4);
-
-                    string strValues = ValuesToShow[0].ToString() + ", " +
-                                       ValuesToShow[1].ToString() + ", " +
-                                       ValuesToShow[2].ToString() + ", " +
-                                       ValuesToShow[3].ToString() + ", " +
-                                       ValuesToShow[4].ToString() + ", " +
-                                       ValuesToShow[5].ToString();
-
-                    //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
-                    _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "left", DateTimeOffset.Now));
-                    var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                        () => CharacteristicLatestValue.Text = message);
-                }
-                else
-                {
-                    rootPage.NotifyUser($"Read failed: {result.Status}", NotifyType.ErrorMessage);
-                }
-            }
+            
         }
 
-        private async void CharacteristicRead_Thread()
-        {
-            //AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
-            //    // BT_Code: Read the actual value from the device by using Uncached.
-            Debug.WriteLine(String.Format($"{DateTime.Now:hh:mm:ss.FFF}"));
-            GattReadResult result = await rightFootCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-            if (result.Status == GattCommunicationStatus.Success)
-            {
-                byte[] data;
-                Int16[] newValue = new Int16[3];
-                CryptographicBuffer.CopyToByteArray(result.Value, out data);
-                ValuesToShow[3] = newValue[0] = BitConverter.ToInt16(data, 0);
-                ValuesToShow[4] = newValue[1] = BitConverter.ToInt16(data, 2);
-                ValuesToShow[5] = newValue[2] = BitConverter.ToInt16(data, 4);
-
-                string strValues = ValuesToShow[0].ToString() + ", " +
-                                   ValuesToShow[1].ToString() + ", " +
-                                   ValuesToShow[2].ToString() + ", " +
-                                   ValuesToShow[3].ToString() + ", " +
-                                   ValuesToShow[4].ToString() + ", " +
-                                   ValuesToShow[5].ToString();
-
-                //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
-                _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "right", DateTimeOffset.Now));
-                var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                    () => CharacteristicLatestValue.Text = message);
-            }
-            else
-            {
-                rootPage.NotifyUser($"Read failed: {result.Status}", NotifyType.ErrorMessage);
-            }
-            if (!(JustRightFoot))
-            {
-                result = await leftFootCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-                if (result.Status == GattCommunicationStatus.Success)
-                {
-                    byte[] data;
-                    Int16[] newValue = new Int16[3];
-                    CryptographicBuffer.CopyToByteArray(result.Value, out data);
-                    ValuesToShow[0] = newValue[0] = BitConverter.ToInt16(data, 0);
-                    ValuesToShow[1] = newValue[1] = BitConverter.ToInt16(data, 2);
-                    ValuesToShow[2] = newValue[2] = BitConverter.ToInt16(data, 4);
-
-                    string strValues = ValuesToShow[0].ToString() + ", " +
-                                       ValuesToShow[1].ToString() + ", " +
-                                       ValuesToShow[2].ToString() + ", " +
-                                       ValuesToShow[3].ToString() + ", " +
-                                       ValuesToShow[4].ToString() + ", " +
-                                       ValuesToShow[5].ToString();
-
-                    //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
-                    _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "left", DateTimeOffset.Now));
-                    var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                        () => CharacteristicLatestValue.Text = message);
-                }
-                else
-                {
-                    rootPage.NotifyUser($"Read failed: {result.Status}", NotifyType.ErrorMessage);
-                }
-            }
-        }
-
+        
         private async void CharacteristicReadButton_Click()
         {
             //    // BT_Code: Read the actual value from the device by using Uncached.
@@ -794,11 +581,11 @@ namespace GenericBLESensor
             //    await CSVHelperObj.SaveTempCSVAsync();
             //}
 
-            GattCommunicationStatus statusLeft = GattCommunicationStatus.Unreachable;
-            GattCommunicationStatus statusRight = GattCommunicationStatus.Unreachable;
+            
+            GattCommunicationStatus status = GattCommunicationStatus.Unreachable;
             if (!subscribedForNotifications)
             {
-                CSVHelperObj = new CSVHelper(JustRightFoot);
+                CSVHelperObj = new CSVHelper();
                 // initialize status 
                 //var cccdValue = GattClientCharacteristicConfigurationDescriptorValue.None;
                 ////selectedCharacteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.)
@@ -831,28 +618,28 @@ namespace GenericBLESensor
                     //        rootPage.NotifyUser($"Error registering for value changes: {statusLeft}", NotifyType.ErrorMessage);
                     //    }
                     //}
-                    statusRight = await rightFootCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
-                    if (statusRight == GattCommunicationStatus.Success)
+                    status = await flowCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                    if (status == GattCommunicationStatus.Success)
                     {
                         //rootPage.NotifyUser("Receiving data from sensor", NotifyType.StatusMessage);
                         //_ = await Task.Run(() => _ = CSVHelperObj.CreateCSVFileAsync());
-                        rightFootCharacteristic.ValueChanged += RightCharacteristic_ValueChanged;
+                        flowCharacteristic.ValueChanged += FlowCharacteristic_ValueChanged;
                         //ValueChangedSubscribeToggle.Content = "Stop";
                         //subscribedForNotifications = true;
                     }
                     else
                     {
-                        rootPage.NotifyUser($"Error registering for value changes: {statusRight}", NotifyType.ErrorMessage);
+                        rootPage.NotifyUser($"Error registering for value changes: {status}", NotifyType.ErrorMessage);
                     }
-                    if (((statusLeft == GattCommunicationStatus.Success) || true) && (statusRight == GattCommunicationStatus.Success))
+                    if (status == GattCommunicationStatus.Success)
                     {
                         ValueChangedSubscribeToggle.Content = "Stop";
                         subscribedForNotifications = true;
-                        rootPage.NotifyUser("Receiving data from sensors", NotifyType.StatusMessage);
+                        rootPage.NotifyUser("Receiving data from sensor", NotifyType.StatusMessage);
                     }
                     else
                     {
-                        throw new Exception("Error with registration.");
+                        rootPage.NotifyUser("Error with registration.", NotifyType.StatusMessage);
                     }
                 }
                 catch (UnauthorizedAccessException ex)
@@ -868,27 +655,11 @@ namespace GenericBLESensor
                     // BT_Code: Must write the CCCD in order for server to send notifications.
                     // We receive them in the ValueChanged event handler.
                     // Note that this sample configures either Indicate or Notify, but not both.
-                    if (!(JustRightFoot))
+                    
+                    status = await flowCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.None);
+                    if (status == GattCommunicationStatus.Success)
                     {
-                        statusLeft = await leftFootCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.None);
-                        if (statusLeft == GattCommunicationStatus.Success)
-                        {
-                            leftFootCharacteristic.ValueChanged -= LeftCharacteristic_ValueChanged;
-                            //rightFootCharacteristic.ValueChanged -= RightCharacteristic_ValueChanged;
-                            //ValueChangedSubscribeToggle.Content = "Start";
-                            //subscribedForNotifications = false;
-                            //await CSVHelperObj.SaveTempCSVAsync();
-                            //rootPage.NotifyUser("Successfully saved file", NotifyType.StatusMessage);
-                        }
-                        else
-                        {
-                            rootPage.NotifyUser($"Error: {statusLeft}", NotifyType.ErrorMessage);
-                        }
-                    }
-                    statusRight = await rightFootCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.None);
-                    if (statusRight == GattCommunicationStatus.Success)
-                    {
-                        rightFootCharacteristic.ValueChanged -= RightCharacteristic_ValueChanged;
+                        flowCharacteristic.ValueChanged -= FlowCharacteristic_ValueChanged;
                         //rightFootCharacteristic.ValueChanged -= RightCharacteristic_ValueChanged;
                         //ValueChangedSubscribeToggle.Content = "Start";
                         //subscribedForNotifications = false;
@@ -897,18 +668,21 @@ namespace GenericBLESensor
                     }
                     else
                     {
-                        rootPage.NotifyUser($"Error: {statusRight}", NotifyType.ErrorMessage);
+                        rootPage.NotifyUser($"Error: {status}", NotifyType.ErrorMessage);
                     }
-                    if (((statusLeft == GattCommunicationStatus.Success) || true) && (statusRight == GattCommunicationStatus.Success))
+                    
+                    
+                    if (status == GattCommunicationStatus.Success)
                     {
                         ValueChangedSubscribeToggle.Content = "Start";
                         subscribedForNotifications = false;
                         await CSVHelperObj.SaveTempCSVAsync();
-                        rootPage.NotifyUser("Successfully saved file", NotifyType.StatusMessage);
+                        //rootPage.NotifyUser("Successfully saved file", NotifyType.StatusMessage);
                     }
                     else
                     {
-                        throw new Exception("Error with deregistration.");
+                        rootPage.NotifyUser("Error with deregistration.", NotifyType.ErrorMessage);
+                        //throw new Exception("");
                     }
                 }
                 catch (UnauthorizedAccessException ex)
@@ -919,85 +693,24 @@ namespace GenericBLESensor
             }
         }
 
-        private async void LeftCharacteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
+        private async void FlowCharacteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
             // BT_Code: An Indicate or Notify reported that the value has changed.
             // Display the new value with a timestamp.
             Debug.WriteLine(String.Format("Received Left {0}  {1}  {2}", args.Timestamp, sender, args.CharacteristicValue));
             //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
             byte[] data;
-            Int16[] newValue = new Int16[3];
+            Int16 newValue;
             CryptographicBuffer.CopyToByteArray(args.CharacteristicValue, out data);
-            ValuesToShow[0] = newValue[0] = BitConverter.ToInt16(data, 0);
-            ValuesToShow[1] = newValue[1] = BitConverter.ToInt16(data, 2);
-            ValuesToShow[2] = newValue[2] = BitConverter.ToInt16(data, 4);
+            ValuesToShow[0] = newValue = BitConverter.ToInt16(data, 0);
 
-            string strValues = ValuesToShow[0].ToString() + ", " +
-                              ValuesToShow[1].ToString() + ", " +
-                              ValuesToShow[2].ToString() + ", " +
-                              ValuesToShow[3].ToString() + ", " +
-                              ValuesToShow[4].ToString() + ", " +
-                              ValuesToShow[5].ToString();
+            string strValues = ValuesToShow[0].ToString();
 
-            _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "left", args.Timestamp));
-            var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {newValue}";
-            //await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-            //    () => CharacteristicLatestValue.Text = message);
-        }
-        private async void RightCharacteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
-        {
-            // BT_Code: An Indicate or Notify reported that the value has changed.
-            // Display the new value with a timestamp.
-            Debug.WriteLine(String.Format("Received Right {0}  {1}  {2}", args.Timestamp, sender, args.CharacteristicValue));
-            byte[] data;
-            Int16[] newValue = new Int16[3];
-            CryptographicBuffer.CopyToByteArray(args.CharacteristicValue, out data);
-            ValuesToShow[3] = newValue[0] = BitConverter.ToInt16(data, 0);
-            ValuesToShow[4] = newValue[1] = BitConverter.ToInt16(data, 2);
-            ValuesToShow[5] = newValue[2] = BitConverter.ToInt16(data, 4);
-
-            string strValues = ValuesToShow[0].ToString() + ", " +
-                               ValuesToShow[1].ToString() + ", " +
-                               ValuesToShow[2].ToString() + ", " +
-                               ValuesToShow[3].ToString() + ", " +
-                               ValuesToShow[4].ToString() + ", " +
-                               ValuesToShow[5].ToString();
-
-            //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
-            _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "right", args.Timestamp));
-            var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
+            _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, args.Timestamp));
+            //var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {newValue}";
+            var message = $"Value: {newValue}";
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                 () => CharacteristicLatestValue.Text = message);
-            if (!(JustRightFoot))
-            {
-                var result = await leftFootCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-                if (result.Status == GattCommunicationStatus.Success)
-                {
-                    byte[] dataLeft;
-                    Int16[] newValueLeft = new Int16[3];
-                    CryptographicBuffer.CopyToByteArray(result.Value, out dataLeft);
-                    ValuesToShow[0] = newValueLeft[0] = BitConverter.ToInt16(dataLeft, 0);
-                    ValuesToShow[1] = newValueLeft[1] = BitConverter.ToInt16(dataLeft, 2);
-                    ValuesToShow[2] = newValueLeft[2] = BitConverter.ToInt16(dataLeft, 4);
-
-                    strValues = ValuesToShow[0].ToString() + ", " +
-                                ValuesToShow[1].ToString() + ", " +
-                                ValuesToShow[2].ToString() + ", " +
-                                ValuesToShow[3].ToString() + ", " +
-                                ValuesToShow[4].ToString() + ", " +
-                                ValuesToShow[5].ToString();
-
-                    //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
-                    _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValueLeft, "left", args.Timestamp));
-                    message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                        () => CharacteristicLatestValue.Text = message);
-                }
-                else
-                {
-                    rootPage.NotifyUser($"Read failed: {result.Status}", NotifyType.ErrorMessage);
-                }
-            }
         }
 
         private string FormatValueByPresentation(IBuffer buffer, GattPresentationFormat format)

@@ -1,4 +1,4 @@
-<!--
+﻿<!--
 //*********************************************************
 //
 // Copyright (c) Microsoft. All rights reserved.
@@ -23,9 +23,8 @@
             <TextBlock Text="Description:" Style="{StaticResource SampleHeaderTextStyle}"/>
             <!--<TextBlock Style="{StaticResource ScenarioDescriptionTextStyle}" Text="Query services from GATT server"/>-->
             <TextBlock TextWrapping="Wrap" Margin="0,10,0,0">
-                This scenario connects to the Bluetooth Low Energy device
-                selected in the "Discover GATT Servers" scenario
-                and communicates with the device.
+                This scenario connects to the bluetooth flow sensor and collects its data.
+                The frequency is 10Hz, the value received is the voltage measured in μV.
             </TextBlock>
             <TextBlock Style="{StaticResource ListItemTextStyle}" TextWrapping="Wrap" Margin="0,10,0,0">
                 Status: <Run x:Name="SelectedDeviceRun" FontWeight="Bold"/>
@@ -35,6 +34,7 @@
                       SelectionChanged="{x:Bind ServiceList_SelectionChanged}"/>
             <ComboBox x:Name="CharacteristicList" Margin="0,10,0,0" PlaceholderText="Choose a characteristic" Visibility="Collapsed"
                       SelectionChanged="{x:Bind CharacteristicList_SelectionChanged}" />
+
             <StackPanel Orientation="Horizontal">
                 <Button x:Name="CharacteristicReadButton" Content="Read Value" Click="{x:Bind CharacteristicReadButton_Click}"
                         Visibility="Collapsed" Margin="0,10,10,0"/>
@@ -47,6 +47,17 @@
                 <Button Content="Write Value as UTF-8" Click="{x:Bind CharacteristicWriteButton_Click}" Margin="0,10,0,0"/>
             </StackPanel>
             <TextBlock x:Name="CharacteristicLatestValue" Margin="0,10,0,0"/>
+            <StackPanel x:Name="FlowValuePanel" Margin="0,10,0,0" Visibility="Visible" Height="467">
+                <TextBlock x:Name="FlowValue"
+                           FontSize="150"
+                           FontFamily="Agency FB"
+                           TextAlignment="Right" HorizontalAlignment="Right" Height="143"><Run Text="0123456789" Foreground="#FFC80A0A"/>
+                </TextBlock>
+                <TextBlock x:Name="CaptionFlowValue"
+                           FontSize="48"
+                           FontFamily="Agency FB"
+                           TextAlignment="Right"><Run Text="mL/h" Foreground="#FFC80A0A"/></TextBlock>
+            </StackPanel>
         </StackPanel>
     </ScrollViewer>
 </Page>

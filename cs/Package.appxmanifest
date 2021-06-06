@@ -32,10 +32,10 @@
           Executable="$targetnametoken$.exe"
           EntryPoint="BluetoothLE.App">
             <uap:VisualElements
-              DisplayName="Bluetooth Shoes Sensoring"
+              DisplayName="Bluetooth Flow Sensoring"
               Square150x150Logo="Assets\squareTile-sdk.png"
               Square44x44Logo="Assets\SmallTile-sdk.png"
-              Description="Bluetooth Low Energy C# application for sole shoes sensor reading."
+              Description="Bluetooth Low Energy C# application for flow sensor reading."
               BackgroundColor="#00b2f0">
                 <uap:SplashScreen Image="Assets\Splash-sdk.png" />
                 <uap:DefaultTile>
