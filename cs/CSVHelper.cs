@@ -200,19 +200,21 @@ namespace GenericBLESensor
             rootPage.NotifyUser($"Saving to: {pathtofile}", NotifyType.StatusMessage);
             file = await storageFolder.CreateFileAsync(tempFilename + " temp.csv", CreationCollisionOption.ReplaceExisting);
             //await FileIO.WriteTextAsync(file, "ID, A, B, C" + Environment.NewLine);
-            string fileBody = "ID, TimeStamp, A, B, C, D, E, F" + Environment.NewLine;
+
+            string fileBody = "A, B, C, D" + Environment.NewLine;
 
 
             foreach (var row in DataReceived)
             {
-                fileBody = fileBody + row.Id.ToString()        + ", " +
-                                      row.TimeStamp.ToString() + ", " +
+                fileBody = fileBody + //row.Id.ToString()        + ", " +
+                                      //row.TimeStamp.ToString() + ", " +
                                       row.A.ToString()         + ", " +
                                       row.B.ToString()         + ", " + 
-                                      row.C.ToString()         + ", " +
+                                      //row.C.ToString()         + ", " +
                                       row.D.ToString()         + ", " +
                                       row.E.ToString()         + ", " +
-                                      row.F.ToString()  + Environment.NewLine;
+                                      //row.F.ToString()  +
+                                      Environment.NewLine;
             }
 
             await FileIO.WriteTextAsync(file, fileBody);
