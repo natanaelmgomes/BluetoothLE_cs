@@ -140,7 +140,8 @@ namespace GenericBLESensor
                     }
                     else
                     {
-                        throw new Exception("Error with cleaning.");
+                        rootPage.NotifyUser("Error with cleaning.", NotifyType.ErrorMessage);
+                        //throw new Exception("Error with cleaning.");
                     }
                 }
                 else
@@ -151,7 +152,8 @@ namespace GenericBLESensor
                     }
                     else
                     {
-                        throw new Exception("Error with cleaning.");
+                        rootPage.NotifyUser("Error with registration.", NotifyType.ErrorMessage);
+                        //throw new Exception("Error with cleaning.");
                     }
                 }
 
@@ -852,7 +854,8 @@ namespace GenericBLESensor
                     }
                     else
                     {
-                        throw new Exception("Error with registration.");
+                        rootPage.NotifyUser("Error with registration.", NotifyType.ErrorMessage);
+                        //throw new Exception("Error with registration.");
                     }
                 }
                 catch (UnauthorizedAccessException ex)
@@ -908,7 +911,8 @@ namespace GenericBLESensor
                     }
                     else
                     {
-                        throw new Exception("Error with deregistration.");
+                        rootPage.NotifyUser("Error with deregistration.", NotifyType.ErrorMessage);
+                        //throw new Exception("Error with deregistration.");
                     }
                 }
                 catch (UnauthorizedAccessException ex)
