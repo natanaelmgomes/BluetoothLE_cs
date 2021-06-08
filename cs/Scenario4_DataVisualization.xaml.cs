@@ -200,10 +200,10 @@ namespace GenericBLESensor
                 // NRF52DK
                 // e7:a6:c8:a0:67:41
 
-                // Feather COM5
+                // Feather COM5 *** Left
                 // ec:f2:a6:8f:51:d7
 
-                // Feather COM6
+                // Feather COM6 *** Right
                 // c1:81:6b:98:16:1f
 
                 // Feather 
@@ -213,7 +213,7 @@ namespace GenericBLESensor
                 bluetoothLeDevice1 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xe7a6c8a06741);
                 bluetoothLeDevice2 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xecf2a68f51d7);
                 bluetoothLeDevice3 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xc1816b98161f);
-                bluetoothLeDevice4 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xdea8d0bd1a47);
+                //bluetoothLeDevice4 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xdea8d0bd1a47);
 
 
                 if (bluetoothLeDevice1 != null)
@@ -575,16 +575,16 @@ namespace GenericBLESensor
                 ValuesToShow[4] = newValue[1] = BitConverter.ToInt16(data, 2);
                 ValuesToShow[5] = newValue[2] = BitConverter.ToInt16(data, 4);
 
-                string strValues = ValuesToShow[0].ToString() + ", " +
-                                   ValuesToShow[1].ToString() + ", " +
-                                   ValuesToShow[2].ToString() + ", " +
-                                   ValuesToShow[3].ToString() + ", " +
-                                   ValuesToShow[4].ToString() + ", " +
-                                   ValuesToShow[5].ToString();
+                string strValues = ValuesToShow[0].ToString().PadLeft(4) + ", " +
+                                   ValuesToShow[1].ToString().PadLeft(4) + ", " +
+                                   ValuesToShow[2].ToString().PadLeft(4) + ", " +
+                                   ValuesToShow[3].ToString().PadLeft(4) + ", " +
+                                   ValuesToShow[4].ToString().PadLeft(4) + ", " +
+                                   ValuesToShow[5].ToString().PadLeft(4);
 
                 //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
                 _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "right", DateTimeOffset.Now));
-                var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
+                var message = $"Value at {DateTime.Now:hh:mm:ss}: {strValues}";
                 await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                     () => CharacteristicLatestValue.Text = message);
             }
@@ -604,16 +604,16 @@ namespace GenericBLESensor
                     ValuesToShow[1] = newValue[1] = BitConverter.ToInt16(data, 2);
                     ValuesToShow[2] = newValue[2] = BitConverter.ToInt16(data, 4);
 
-                    string strValues = ValuesToShow[0].ToString() + ", " +
-                                       ValuesToShow[1].ToString() + ", " +
-                                       ValuesToShow[2].ToString() + ", " +
-                                       ValuesToShow[3].ToString() + ", " +
-                                       ValuesToShow[4].ToString() + ", " +
-                                       ValuesToShow[5].ToString();
+                    string strValues = ValuesToShow[0].ToString().PadLeft(4) + ", " +
+                                       ValuesToShow[1].ToString().PadLeft(4) + ", " +
+                                       ValuesToShow[2].ToString().PadLeft(4) + ", " +
+                                       ValuesToShow[3].ToString().PadLeft(4) + ", " +
+                                       ValuesToShow[4].ToString().PadLeft(4) + ", " +
+                                       ValuesToShow[5].ToString().PadLeft(4);
 
                     //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
                     _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "left", DateTimeOffset.Now));
-                    var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
+                    var message = $"Value at {DateTime.Now:hh:mm:ss}: {strValues}";
                     await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                         () => CharacteristicLatestValue.Text = message);
                 }
@@ -624,69 +624,6 @@ namespace GenericBLESensor
             }
         }
 
-        private async void CharacteristicRead_Thread()
-        {
-            //AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
-            //    // BT_Code: Read the actual value from the device by using Uncached.
-            Debug.WriteLine(String.Format($"{DateTime.Now:hh:mm:ss.FFF}"));
-            GattReadResult result = await rightFootCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-            if (result.Status == GattCommunicationStatus.Success)
-            {
-                byte[] data;
-                Int16[] newValue = new Int16[3];
-                CryptographicBuffer.CopyToByteArray(result.Value, out data);
-                ValuesToShow[3] = newValue[0] = BitConverter.ToInt16(data, 0);
-                ValuesToShow[4] = newValue[1] = BitConverter.ToInt16(data, 2);
-                ValuesToShow[5] = newValue[2] = BitConverter.ToInt16(data, 4);
-
-                string strValues = ValuesToShow[0].ToString() + ", " +
-                                   ValuesToShow[1].ToString() + ", " +
-                                   ValuesToShow[2].ToString() + ", " +
-                                   ValuesToShow[3].ToString() + ", " +
-                                   ValuesToShow[4].ToString() + ", " +
-                                   ValuesToShow[5].ToString();
-
-                //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
-                _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "right", DateTimeOffset.Now));
-                var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                    () => CharacteristicLatestValue.Text = message);
-            }
-            else
-            {
-                rootPage.NotifyUser($"Read failed: {result.Status}", NotifyType.ErrorMessage);
-            }
-            if (!(JustRightFoot))
-            {
-                result = await leftFootCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-                if (result.Status == GattCommunicationStatus.Success)
-                {
-                    byte[] data;
-                    Int16[] newValue = new Int16[3];
-                    CryptographicBuffer.CopyToByteArray(result.Value, out data);
-                    ValuesToShow[0] = newValue[0] = BitConverter.ToInt16(data, 0);
-                    ValuesToShow[1] = newValue[1] = BitConverter.ToInt16(data, 2);
-                    ValuesToShow[2] = newValue[2] = BitConverter.ToInt16(data, 4);
-
-                    string strValues = ValuesToShow[0].ToString() + ", " +
-                                       ValuesToShow[1].ToString() + ", " +
-                                       ValuesToShow[2].ToString() + ", " +
-                                       ValuesToShow[3].ToString() + ", " +
-                                       ValuesToShow[4].ToString() + ", " +
-                                       ValuesToShow[5].ToString();
-
-                    //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
-                    _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "left", DateTimeOffset.Now));
-                    var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                        () => CharacteristicLatestValue.Text = message);
-                }
-                else
-                {
-                    rootPage.NotifyUser($"Read failed: {result.Status}", NotifyType.ErrorMessage);
-                }
-            }
-        }
 
         private async void CharacteristicReadButton_Click()
         {
@@ -773,28 +710,11 @@ namespace GenericBLESensor
         //}
 
         private bool subscribedForNotifications = false;
-        private bool timerEnabled = false;
-        //AutoResetEvent autoEvent = new AutoResetEvent(false);
-        Timer stateTimer;
 
 
         private async void ValueChangedSubscribeToggle_Click()
         {
-
-            //if (!(timerEnabled))
-            //{
-            //    stateTimer = new Timer(CharacteristicRead_Async, null, 0, 100);
-            //    ValueChangedSubscribeToggle.Content = "Stop";
-            //    timerEnabled = true;
-            //    CSVHelperObj = new CSVHelper(JustRightFoot);
-            //}
-            //else
-            //{
-            //    stateTimer.Dispose();
-            //    ValueChangedSubscribeToggle.Content = "Start";
-            //    timerEnabled = false;
-            //    await CSVHelperObj.SaveTempCSVAsync();
-            //}
+            ValueChangedSubscribeToggle.IsEnabled = false;
 
             GattCommunicationStatus statusLeft = GattCommunicationStatus.Unreachable;
             GattCommunicationStatus statusRight = GattCommunicationStatus.Unreachable;
@@ -849,6 +769,7 @@ namespace GenericBLESensor
                     if (((statusLeft == GattCommunicationStatus.Success) || true) && (statusRight == GattCommunicationStatus.Success))
                     {
                         ValueChangedSubscribeToggle.Content = "Stop";
+                        ValueChangedSubscribeToggle.IsEnabled = true;
                         subscribedForNotifications = true;
                         rootPage.NotifyUser("Receiving data from sensors", NotifyType.StatusMessage);
                     }
@@ -905,6 +826,7 @@ namespace GenericBLESensor
                     if (((statusLeft == GattCommunicationStatus.Success) || true) && (statusRight == GattCommunicationStatus.Success))
                     {
                         ValueChangedSubscribeToggle.Content = "Start";
+                        ValueChangedSubscribeToggle.IsEnabled = true;
                         subscribedForNotifications = false;
                         await CSVHelperObj.SaveTempCSVAsync();
                         rootPage.NotifyUser("Successfully saved file", NotifyType.StatusMessage);
@@ -921,6 +843,7 @@ namespace GenericBLESensor
                     rootPage.NotifyUser(ex.Message, NotifyType.ErrorMessage);
                 }
             }
+            ValueChangedSubscribeToggle.IsEnabled = true;
         }
 
         private async void LeftCharacteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
@@ -936,15 +859,15 @@ namespace GenericBLESensor
             ValuesToShow[1] = newValue[1] = BitConverter.ToInt16(data, 2);
             ValuesToShow[2] = newValue[2] = BitConverter.ToInt16(data, 4);
 
-            string strValues = ValuesToShow[0].ToString() + ", " +
-                              ValuesToShow[1].ToString() + ", " +
-                              ValuesToShow[2].ToString() + ", " +
-                              ValuesToShow[3].ToString() + ", " +
-                              ValuesToShow[4].ToString() + ", " +
-                              ValuesToShow[5].ToString();
+            string strValues = ValuesToShow[0].ToString().PadLeft(4) + ", " +
+                              ValuesToShow[1].ToString().PadLeft(4) + ", " +
+                              ValuesToShow[2].ToString().PadLeft(4) + ", " +
+                              ValuesToShow[3].ToString().PadLeft(4) + ", " +
+                              ValuesToShow[4].ToString().PadLeft(4) + ", " +
+                              ValuesToShow[5].ToString().PadLeft(4);
 
             _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "left", args.Timestamp));
-            var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {newValue}";
+            var message = $"Value at {DateTime.Now:hh:mm:ss}: {newValue}";
             //await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
             //    () => CharacteristicLatestValue.Text = message);
         }
@@ -960,47 +883,61 @@ namespace GenericBLESensor
             ValuesToShow[4] = newValue[1] = BitConverter.ToInt16(data, 2);
             ValuesToShow[5] = newValue[2] = BitConverter.ToInt16(data, 4);
 
-            string strValues = ValuesToShow[0].ToString() + ", " +
-                               ValuesToShow[1].ToString() + ", " +
-                               ValuesToShow[2].ToString() + ", " +
-                               ValuesToShow[3].ToString() + ", " +
-                               ValuesToShow[4].ToString() + ", " +
-                               ValuesToShow[5].ToString();
+            string strValues = ValuesToShow[0].ToString().PadLeft(4) + ", " +
+                               ValuesToShow[1].ToString().PadLeft(4) + ", " +
+                               ValuesToShow[2].ToString().PadLeft(4) + ", " +
+                               ValuesToShow[3].ToString().PadLeft(4) + ", " +
+                               ValuesToShow[4].ToString().PadLeft(4) + ", " +
+                               ValuesToShow[5].ToString().PadLeft(4);
 
             //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
             _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, "right", args.Timestamp));
-            var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
+            var message = $"Value at {DateTime.Now:hh:mm:ss}: {strValues}";
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                 () => CharacteristicLatestValue.Text = message);
             if (!(JustRightFoot))
             {
-                var result = await leftFootCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-                if (result.Status == GattCommunicationStatus.Success)
+                try
                 {
-                    byte[] dataLeft;
-                    Int16[] newValueLeft = new Int16[3];
-                    CryptographicBuffer.CopyToByteArray(result.Value, out dataLeft);
-                    ValuesToShow[0] = newValueLeft[0] = BitConverter.ToInt16(dataLeft, 0);
-                    ValuesToShow[1] = newValueLeft[1] = BitConverter.ToInt16(dataLeft, 2);
-                    ValuesToShow[2] = newValueLeft[2] = BitConverter.ToInt16(dataLeft, 4);
+                    GattReadResult result = await leftFootCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
+                    if (result.Status == GattCommunicationStatus.Success)
+                    {
+                        byte[] dataLeft;
+                        Int16[] newValueLeft = new Int16[3];
+                        CryptographicBuffer.CopyToByteArray(result.Value, out dataLeft);
+                        ValuesToShow[0] = newValueLeft[0] = BitConverter.ToInt16(dataLeft, 0);
+                        ValuesToShow[1] = newValueLeft[1] = BitConverter.ToInt16(dataLeft, 2);
+                        ValuesToShow[2] = newValueLeft[2] = BitConverter.ToInt16(dataLeft, 4);
 
-                    strValues = ValuesToShow[0].ToString() + ", " +
-                                ValuesToShow[1].ToString() + ", " +
-                                ValuesToShow[2].ToString() + ", " +
-                                ValuesToShow[3].ToString() + ", " +
-                                ValuesToShow[4].ToString() + ", " +
-                                ValuesToShow[5].ToString();
+                        strValues = ValuesToShow[0].ToString().PadLeft(4) + ", " +
+                                    ValuesToShow[1].ToString().PadLeft(4) + ", " +
+                                    ValuesToShow[2].ToString().PadLeft(4) + ", " +
+                                    ValuesToShow[3].ToString().PadLeft(4) + ", " +
+                                    ValuesToShow[4].ToString().PadLeft(4) + ", " +
+                                    ValuesToShow[5].ToString().PadLeft(4);
 
-                    //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
-                    _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValueLeft, "left", args.Timestamp));
-                    message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
-                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                        () => CharacteristicLatestValue.Text = message);
+                        //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
+                        _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValueLeft, "left", args.Timestamp));
+                        message = $"Value at {DateTime.Now:hh:mm:ss}: {strValues}";
+                        await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
+                            () => CharacteristicLatestValue.Text = message);
+                    }
+                    else
+                    {
+                        Int16[] newValueLeft = { ValuesToShow[0], ValuesToShow[1], ValuesToShow[2] };
+                        _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValueLeft, "left", args.Timestamp));
+                        rootPage.NotifyUser($"Read failed on Left: {result.Status}", NotifyType.ErrorMessage);
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    rootPage.NotifyUser($"Read failed: {result.Status}", NotifyType.ErrorMessage);
+
+                    //await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => ValueChangedSubscribeToggle_Click());
+                    rootPage.NotifyUser("Critical failure on Left.", NotifyType.ErrorMessage);
+
                 }
+                
+                
             }
         }
 
