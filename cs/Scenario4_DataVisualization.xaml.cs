@@ -1,4 +1,4 @@
-//*********************************************************
+﻿//*********************************************************
 //
 // Copyright (c) Microsoft. All rights reserved.
 // This code is licensed under the MIT License (MIT).
@@ -58,8 +58,21 @@ namespace GenericBLESensor
         //private GattCharacteristic registeredCharacteristic;
         private GattPresentationFormat presentationFormat;
 
+        List<Int32> calibrationData = new List<Int32>();
+        List<Int32> flowDatatoShow = new List<Int32>();
+        private Int32 flowDatatoShowMaxNumber = 15;
+        private Int32 calibrationVoltage = 0;
+        private Int32 calibrationCounter = 0;
+        private Int32 calibrationMaxNumber = 100;
+        private bool isCalibrated = false;
+
         Int16[] ValuesToShow;
-        //bool JustRightFoot = false;
+
+        private bool subscribedForNotifications = false;
+        private bool subscribedForCalibration = false;
+        private bool timerEnabled = false;
+        //AutoResetEvent autoEvent = new AutoResetEvent(false);
+        Timer flowValueTimer;
 
         #region Error Codes
         readonly int E_BLUETOOTH_ATT_WRITE_NOT_PERMITTED = unchecked((int)0x80650003);
@@ -177,9 +190,9 @@ namespace GenericBLESensor
                 // 0x0000dea8d0bd1a47
                 //
 
-                bluetoothLeDevice1 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xe7a6c8a06741);
-                bluetoothLeDevice2 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xecf2a68f51d7);
-                bluetoothLeDevice3 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xc1816b98161f);
+                //bluetoothLeDevice1 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xe7a6c8a06741);
+                //bluetoothLeDevice2 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xecf2a68f51d7);
+                //bluetoothLeDevice3 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xc1816b98161f);
                 bluetoothLeDevice4 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xdea8d0bd1a47);
 
 
@@ -286,8 +299,97 @@ namespace GenericBLESensor
                 ValueChangedSubscribeToggle.Content = "Start";
                 rootPage.NotifyUser("Connected to sensor.", NotifyType.StatusMessage);
                 SelectedDeviceRun.Text = "Connected";
+                Calibration.IsEnabled = true;
+                Calibration.Visibility = Visibility.Visible;
             }
             ConnectButton.IsEnabled = true;
+        }
+        #endregion
+
+        #region Calibration
+        private async void FlowCharacteristic_Calibration(GattCharacteristic sender, GattValueChangedEventArgs args)
+        {
+            // BT_Code: An Indicate or Notify reported that the value has changed.
+            // Display the new value with a timestamp.
+            Debug.WriteLine(String.Format("Received {0}  {1}  {2}", args.Timestamp, sender, args.CharacteristicValue));
+            byte[] data;
+            Int16 newValue;
+            CryptographicBuffer.CopyToByteArray(args.CharacteristicValue, out data);
+            ValuesToShow[0] = newValue = BitConverter.ToInt16(data, 0);
+            calibrationData.Add(newValue);
+
+            string strValues = ValuesToShow[0].ToString();
+
+            //_ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, args.Timestamp));
+            //var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {newValue}";
+            var message = $"Value: {newValue}";
+            await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => CharacteristicLatestValue.Text = message);
+            calibrationCounter++;
+            if (calibrationCounter > calibrationMaxNumber)
+            {
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => Calibration_Click());
+            }
+        }
+
+        private async void Calibration_Click()
+        {
+            Calibration.IsEnabled = false;
+            GattCommunicationStatus status = GattCommunicationStatus.Unreachable;
+            if (!subscribedForCalibration) {
+                try {
+                    status = await flowCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.Notify);
+                    if (status == GattCommunicationStatus.Success) {
+                        flowCharacteristic.ValueChanged += FlowCharacteristic_Calibration;
+                    }
+                    else {
+                        rootPage.NotifyUser($"Error registering for value changes: {status}", NotifyType.ErrorMessage);
+                    }
+                    if (status == GattCommunicationStatus.Success)   {
+                        calibrationData = new List<Int32>();
+                        subscribedForCalibration = true;
+                        rootPage.NotifyUser("Calibration started", NotifyType.StatusMessage);
+                    }
+                    else {
+                        rootPage.NotifyUser("Error with registration.", NotifyType.StatusMessage);
+                    }
+                }
+                catch (UnauthorizedAccessException ex) {
+                    // This usually happens when a device reports that it support indicate, but it actually doesn't.
+                    rootPage.NotifyUser(ex.Message, NotifyType.ErrorMessage);
+                }
+            }
+            else {
+                try {
+                    status = await flowCharacteristic.WriteClientCharacteristicConfigurationDescriptorAsync(GattClientCharacteristicConfigurationDescriptorValue.None);
+                    if (status == GattCommunicationStatus.Success) {
+                        flowCharacteristic.ValueChanged -= FlowCharacteristic_Calibration;
+                    }
+                    else {
+                        rootPage.NotifyUser($"Error: {status}", NotifyType.ErrorMessage);
+                    }
+                    if (status == GattCommunicationStatus.Success)  {
+                        subscribedForCalibration = false;
+                        calibrationCounter = 0;
+                        double sum = 0;
+                        for (int i = 0; i < calibrationData.Count; i++)
+                        {
+                            sum += calibrationData[i];
+                        }
+                        calibrationVoltage = (Int32) (sum / (float)calibrationData.Count);
+                        Calibration.IsEnabled = true;
+                        rootPage.NotifyUser($"Calibration value: {calibrationVoltage} μV", NotifyType.StatusMessage);
+                        isCalibrated = true;
+                    }
+                    else {
+                        rootPage.NotifyUser("Error with deregistration.", NotifyType.ErrorMessage);
+                    }
+                }
+                catch (UnauthorizedAccessException ex) {
+                    // This usually happens when a device reports that it support notify, but it actually doesn't.
+                    rootPage.NotifyUser(ex.Message, NotifyType.ErrorMessage);
+                }
+            }
+            
         }
         #endregion
 
@@ -347,39 +449,6 @@ namespace GenericBLESensor
         }
         #endregion
 
-        private void AddLeftValueChangedHandler()
-        {
-            //    ValueChangedSubscribeToggle.Content = "Stop";
-            //    if (!subscribedForNotifications)
-            //    {
-            //        registeredCharacteristic = selectedCharacteristic;
-            //        registeredCharacteristic.ValueChanged += LeftCharacteristic_ValueChanged;
-            //        subscribedForNotifications = true;
-            //    }
-            //}
-
-            //private void AddRightValueChangedHandler()
-            //{
-            //    ValueChangedSubscribeToggle.Content = "Stop";
-            //    if (!subscribedForNotifications)
-            //    {
-            //        registeredCharacteristic = selectedCharacteristic;
-            //        registeredCharacteristic.ValueChanged += RightCharacteristic_ValueChanged;
-            //        subscribedForNotifications = true;
-            //    }
-            //}
-
-            //private void RemoveValueChangedHandler()
-            //{
-            //    ValueChangedSubscribeToggle.Content = "Start";
-            //    if (subscribedForNotifications)
-            //    {
-            //        registeredCharacteristic.ValueChanged -= Characteristic_ValueChanged;
-            //        registeredCharacteristic = null;
-            //        subscribedForNotifications = false;
-            //    }
-        }
-
         private async void CharacteristicList_SelectionChanged()
         {
             //    selectedCharacteristic = (GattCharacteristic)((ComboBoxItem)CharacteristicList.SelectedItem)?.Tag;
@@ -427,51 +496,6 @@ namespace GenericBLESensor
         {
             element.Visibility = visible ? Visibility.Visible : Visibility.Collapsed;
         }
-
-        private void EnableCharacteristicPanels(GattCharacteristicProperties properties)
-        {
-            // BT_Code: Hide the controls which do not apply to this characteristic.
-            SetVisibility(CharacteristicReadButton, properties.HasFlag(GattCharacteristicProperties.Read));
-
-            SetVisibility(CharacteristicWritePanel,
-                properties.HasFlag(GattCharacteristicProperties.Write) ||
-                properties.HasFlag(GattCharacteristicProperties.WriteWithoutResponse));
-            CharacteristicWriteValue.Text = "";
-
-            SetVisibility(ValueChangedSubscribeToggle, properties.HasFlag(GattCharacteristicProperties.Indicate) ||
-                                                       properties.HasFlag(GattCharacteristicProperties.Notify));
-
-        }
-
-        private async void CharacteristicRead_Async(Object stateInfo)
-        {
-            //AutoResetEvent autoEvent = (AutoResetEvent)stateInfo;
-            //    // BT_Code: Read the actual value from the device by using Uncached.
-            Debug.WriteLine(String.Format($"{DateTime.Now:hh:mm:ss.FFF}"));
-            GattReadResult result = await flowCharacteristic.ReadValueAsync(BluetoothCacheMode.Uncached);
-            if (result.Status == GattCommunicationStatus.Success)
-            {
-                byte[] data;
-                Int16 newValue;
-                CryptographicBuffer.CopyToByteArray(result.Value, out data);
-                ValuesToShow[0] = newValue = BitConverter.ToInt16(data, 0);
-
-                string strValues = ValuesToShow[0].ToString();
-
-                //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
-                _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, DateTimeOffset.Now));
-                //var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {strValues}";
-                var message = $"Value: {strValues}";
-                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
-                    () => CharacteristicLatestValue.Text = message);
-            }
-            else
-            {
-                rootPage.NotifyUser($"Read failed: {result.Status}", NotifyType.ErrorMessage);
-            }
-            
-        }
-
         
         private async void CharacteristicReadButton_Click()
         {
@@ -526,49 +550,56 @@ namespace GenericBLESensor
             //    }
         }
 
-        //private async Task<bool> WriteBufferToSelectedCharacteristicAsync(IBuffer buffer)
-        //{
-        //    try
-        //    {
-        //        // BT_Code: Writes the value from the buffer to the characteristic.
-        //        var result = await selectedCharacteristic.WriteValueWithResultAsync(buffer);
+        private async void UpdateFlowValue(object state)
+        {
+            if (flowDatatoShow.Count < 10) {
+                await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => FlowValue.Text = "0");
+            }
+            else {
+                Int32 tempValue;
+                double sum = 0;
+                for (int i = 0; i < flowDatatoShow.Count; i++) {
+                    sum += flowDatatoShow[i];
+                }
+                tempValue = (Int32)(sum / (float)flowDatatoShow.Count);
+                tempValue -= calibrationVoltage;
 
-        //        if (result.Status == GattCommunicationStatus.Success)
-        //        {
-        //            rootPage.NotifyUser("Successfully wrote value to device", NotifyType.StatusMessage);
-        //            return true;
-        //        }
-        //        else
-        //        {
-        //            rootPage.NotifyUser($"Write failed: {result.Status}", NotifyType.ErrorMessage);
-        //            return false;
-        //        }
-        //    }
-        //    catch (Exception ex) when (ex.HResult == E_BLUETOOTH_ATT_INVALID_PDU)
-        //    {
-        //        rootPage.NotifyUser(ex.Message, NotifyType.ErrorMessage);
-        //        return false;
-        //    }
-        //    catch (Exception ex) when (ex.HResult == E_BLUETOOTH_ATT_WRITE_NOT_PERMITTED || ex.HResult == E_ACCESSDENIED)
-        //    {
-        //        // This usually happens when a device reports that it support writing, but it actually doesn't.
-        //        rootPage.NotifyUser(ex.Message, NotifyType.ErrorMessage);
-        //        return false;
-        //    }
-        //}
 
-        private bool subscribedForNotifications = false;
-        private bool timerEnabled = false;
-        //AutoResetEvent autoEvent = new AutoResetEvent(false);
-        Timer stateTimer;
 
+                // Calibration curve untill 100mL/h
+                //tempValue = (int)((float)(Math.Abs(tempValue) - 854) / 12.992);
+                tempValue = (int)( 2.3991*Math.Exp(0.0018*Math.Abs((float)tempValue)) );
+
+                //if (tempValue < 10)
+                //{
+                //    tempValue = 10;
+                //}
+                //if (tempValue > 100)
+                //{
+                //    tempValue = 100;
+                //}
+
+
+
+                if (flowDatatoShow.Count > 20)
+                {
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => FlowValue. Text = "0000");
+                }
+                else
+                {
+                    string strValue = tempValue.ToString();
+                    await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () => FlowValue.Text = strValue);
+                }
+
+            }
+        }
 
         private async void ValueChangedSubscribeToggle_Click()
         {
-
+            ValueChangedSubscribeToggle.IsEnabled = false;
             //if (!(timerEnabled))
             //{
-            //    stateTimer = new Timer(CharacteristicRead_Async, null, 0, 100);
+            //    stateTimer = new Timer(UpdateFlowValue, null, 0, 1000);
             //    ValueChangedSubscribeToggle.Content = "Stop";
             //    timerEnabled = true;
             //    CSVHelperObj = new CSVHelper(JustRightFoot);
@@ -580,8 +611,6 @@ namespace GenericBLESensor
             //    timerEnabled = false;
             //    await CSVHelperObj.SaveTempCSVAsync();
             //}
-
-            
             GattCommunicationStatus status = GattCommunicationStatus.Unreachable;
             if (!subscribedForNotifications)
             {
@@ -636,6 +665,7 @@ namespace GenericBLESensor
                         ValueChangedSubscribeToggle.Content = "Stop";
                         subscribedForNotifications = true;
                         rootPage.NotifyUser("Receiving data from sensor", NotifyType.StatusMessage);
+                        flowValueTimer = new Timer(UpdateFlowValue, null, 0, 1000);
                     }
                     else
                     {
@@ -677,6 +707,7 @@ namespace GenericBLESensor
                         ValueChangedSubscribeToggle.Content = "Start";
                         subscribedForNotifications = false;
                         await CSVHelperObj.SaveTempCSVAsync();
+                        flowValueTimer.Dispose();
                         //rootPage.NotifyUser("Successfully saved file", NotifyType.StatusMessage);
                     }
                     else
@@ -691,18 +722,24 @@ namespace GenericBLESensor
                     rootPage.NotifyUser(ex.Message, NotifyType.ErrorMessage);
                 }
             }
+            ValueChangedSubscribeToggle.IsEnabled = true;
         }
 
         private async void FlowCharacteristic_ValueChanged(GattCharacteristic sender, GattValueChangedEventArgs args)
         {
             // BT_Code: An Indicate or Notify reported that the value has changed.
             // Display the new value with a timestamp.
-            Debug.WriteLine(String.Format("Received Left {0}  {1}  {2}", args.Timestamp, sender, args.CharacteristicValue));
-            //string newValue = FormatValueByPresentation(args.CharacteristicValue, presentationFormat);
+            Debug.WriteLine(String.Format("Received {0}  {1}  {2}", args.Timestamp, sender, args.CharacteristicValue));
             byte[] data;
             Int16 newValue;
             CryptographicBuffer.CopyToByteArray(args.CharacteristicValue, out data);
             ValuesToShow[0] = newValue = BitConverter.ToInt16(data, 0);
+
+            flowDatatoShow.Add(newValue);
+            if (flowDatatoShow.Count > flowDatatoShowMaxNumber)
+            {
+                flowDatatoShow.RemoveAt(0);
+            }
 
             string strValues = ValuesToShow[0].ToString();
 
