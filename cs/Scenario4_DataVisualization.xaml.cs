@@ -213,7 +213,7 @@ namespace GenericBLESensor
                 bluetoothLeDevice1 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xe7a6c8a06741);
                 bluetoothLeDevice2 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xecf2a68f51d7);
                 bluetoothLeDevice3 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xc1816b98161f);
-                //bluetoothLeDevice4 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xdea8d0bd1a47);
+                bluetoothLeDevice4 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xdea8d0bd1a47);
 
 
                 if (bluetoothLeDevice1 != null)
