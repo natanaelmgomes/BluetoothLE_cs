@@ -104,56 +104,61 @@ namespace GenericBLESensor
             //List<int> numbers = values
             //.Split(',').Select(int.Parse).ToList();
             CSVDataFrame temp = null;
-            CSVDataFrame temp2 = null;
-            if (side == "left")
-            {
-                FirstLeft = true;
-                
+            //CSVDataFrame temp2 = null;
+            //if (side == "left")
+            //{
+            //    FirstLeft = true;
 
-                temp = new CSVDataFrame
-                {
-                    Id = LeftIdtag++,
-                    A = values[0],
-                    B = values[1],
-                    C = values[2]
-                };
-            }
-            else if (side == "right")
-            {
-                FirstRight = true;
-                long timestamp = milliseconds.ToUnixTimeMilliseconds();
-                temp = new CSVDataFrame
-                {
-                    Id = RightIdtag++,
-                    TimeStamp = timestamp,
-                    A = values[0],
-                    B = values[1],
-                    C = values[2]
-                };
-            }
 
-            if (FirstLeft && FirstRight)
+            //    temp = new CSVDataFrame
+            //    {
+            //        Id = LeftIdtag++,
+            //        A = values[0],
+            //        B = values[1],
+            //        C = values[2]
+            //    };
+            //}
+            //else if (side == "right")
+            //{
+            //    FirstRight = true;
+            //    long timestamp = milliseconds.ToUnixTimeMilliseconds();
+            //    temp = new CSVDataFrame
+            //    {
+            //        Id = RightIdtag++,
+            //        TimeStamp = timestamp,
+            //        A = values[0],
+            //        B = values[1],
+            //        C = values[2]
+            //    };
+            //}
+
+            //if (FirstLeft && FirstRight)
+            //{
+            //    if (side == "left")
+            //    {
+            //        LeftDataReceived.Add(temp);
+            //    }
+            //    else if (side == "right")
+            //    {
+            //RightDataReceived.Add(temp);
+            //if (JustRightFoot)
+            //{
+            long timestamp = milliseconds.ToUnixTimeMilliseconds();
+            temp = new CSVDataFrame
             {
-                if (side == "left")
-                {
-                    LeftDataReceived.Add(temp);
-                }
-                else if (side == "right")
-                {
-                    RightDataReceived.Add(temp);
-                    if (JustRightFoot)
-                    {
-                        temp2 = new CSVDataFrame
-                        {
-                            Id = RightIdtag++,
-                            A = 0,
-                            B = 0,
-                            C = 0
-                        };
-                        LeftDataReceived.Add(temp2);
-                    }
-                }
-            }
+                Id = RightIdtag++,
+                TimeStamp = timestamp,
+                A = values[0],
+                B = values[1],
+                C = values[2],
+                D = values[3],
+                E = values[4],
+                F = values[5]
+            };
+            DataReceived.Add(temp);
+                //    }
+            //    //}
+            //}
             return 0;
         }
 
@@ -165,33 +170,33 @@ namespace GenericBLESensor
             //    writer.WriteLine("ID,A,B,C");
             //}
 
-            if (LeftDataReceived.Count != RightDataReceived.Count)
-            {
-                while (LeftDataReceived.Count > RightDataReceived.Count)
-                {
-                    LeftDataReceived.RemoveAt(LeftDataReceived.Count - 1 );
-                }
-                while (LeftDataReceived.Count < RightDataReceived.Count)
-                {
-                    RightDataReceived.RemoveAt(RightDataReceived.Count - 1);
-                }
-            }
+            //if (LeftDataReceived.Count != RightDataReceived.Count)
+            //{
+            //    while (LeftDataReceived.Count > RightDataReceived.Count)
+            //    {
+            //        LeftDataReceived.RemoveAt(LeftDataReceived.Count - 1 );
+            //    }
+            //    while (LeftDataReceived.Count < RightDataReceived.Count)
+            //    {
+            //        RightDataReceived.RemoveAt(RightDataReceived.Count - 1);
+            //    }
+            //}
 
-            for(int i = 0; i < RightDataReceived.Count; i++ )
-            {
-                CSVDataFrame temp = new CSVDataFrame
-                {
-                    Id = i,
-                    TimeStamp = RightDataReceived[i].TimeStamp,
-                    A = LeftDataReceived[i].A,
-                    B = LeftDataReceived[i].B,
-                    C = LeftDataReceived[i].C,
-                    D = RightDataReceived[i].A,
-                    E = RightDataReceived[i].B,
-                    F = RightDataReceived[i].C,
-                };
-                DataReceived.Add(temp);
-            }
+            //for(int i = 0; i < RightDataReceived.Count; i++ )
+            //{
+            //    CSVDataFrame temp = new CSVDataFrame
+            //    {
+            //        Id = i,
+            //        TimeStamp = RightDataReceived[i].TimeStamp,
+            //        A = LeftDataReceived[i].A,
+            //        B = LeftDataReceived[i].B,
+            //        C = LeftDataReceived[i].C,
+            //        D = RightDataReceived[i].A,
+            //        E = RightDataReceived[i].B,
+            //        F = RightDataReceived[i].C,
+            //    };
+            //    DataReceived.Add(temp);
+            //}
 
 
 
@@ -201,13 +206,13 @@ namespace GenericBLESensor
             file = await storageFolder.CreateFileAsync(tempFilename + " temp.csv", CreationCollisionOption.ReplaceExisting);
             //await FileIO.WriteTextAsync(file, "ID, A, B, C" + Environment.NewLine);
 
-            string fileBody = "A, B, C, D" + Environment.NewLine;
+            string fileBody = "Time, A, B, C, D" + Environment.NewLine;
 
 
             foreach (var row in DataReceived)
             {
                 fileBody = fileBody + //row.Id.ToString()        + ", " +
-                                      //row.TimeStamp.ToString() + ", " +
+                                      row.TimeStamp.ToString() + ", " +
                                       row.A.ToString()         + ", " +
                                       row.B.ToString()         + ", " + 
                                       //row.C.ToString()         + ", " +
