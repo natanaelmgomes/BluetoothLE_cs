@@ -80,7 +80,7 @@ namespace GenericBLESensor
         //    return 0;
         //}
 
-        public int SaveData(Int16 value, DateTimeOffset milliseconds)
+        public int SaveData(Int16[] value, DateTimeOffset milliseconds)
         {
             //List<CSVDataFrame> records = new List<CSVDataFrame> { };
             //using (var writer = new StreamWriter(new FileStream("C:\\Users\\natan\\temp.csv", FileMode.Create), Encoding.UTF8))
@@ -96,7 +96,8 @@ namespace GenericBLESensor
             {
                 Id = Idtag++,
                 TimeStamp = milliseconds.ToUnixTimeMilliseconds(),
-                A = value
+                A = value[0],
+                B = value[1]
             };
 
             DataReceived.Add(temp);
@@ -112,11 +113,6 @@ namespace GenericBLESensor
             //    writer.WriteLine("ID,A,B,C");
             //}
 
-
-
-
-
-
             string pathtofile = storageFolder.Path;
             rootPage.NotifyUser($"Saving to: {pathtofile}", NotifyType.StatusMessage);
             file = await storageFolder.CreateFileAsync(tempFilename + " temp.csv", CreationCollisionOption.ReplaceExisting);
@@ -130,7 +126,8 @@ namespace GenericBLESensor
                 fileBody = fileBody + row.Id.ToString()        + ", " +
                                       row.TimeStamp.ToString() + ", " +
                                       t.ToString("0.0") + ", " +
-                                      row.A.ToString()         
+                                      row.A.ToString() + ", " +
+                                      row.B.ToString()
                                       //row.B.ToString()         + ", " + 
                                       //row.C.ToString()         + ", " +
                                       //row.D.ToString()         + ", " +

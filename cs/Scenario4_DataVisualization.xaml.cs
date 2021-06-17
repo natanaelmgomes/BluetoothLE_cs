@@ -43,6 +43,7 @@ namespace GenericBLESensor
         private BluetoothLEDevice bluetoothLeDevice2 = null;
         private BluetoothLEDevice bluetoothLeDevice3 = null;
         private BluetoothLEDevice bluetoothLeDevice4 = null;
+        private BluetoothLEDevice bluetoothLeDevice5 = null;
         private BluetoothLEDevice bluetoothLeDevice;
         //private GattCharacteristic selectedCharacteristic;
 
@@ -66,7 +67,7 @@ namespace GenericBLESensor
         private Int32 calibrationMaxNumber = 100;
         private bool isCalibrated = false;
 
-        Int16[] ValuesToShow;
+        float[] ValuesToShow;
 
         private bool subscribedForNotifications = false;
         private bool subscribedForCalibration = false;
@@ -97,7 +98,7 @@ namespace GenericBLESensor
                 ConnectButton.IsEnabled = true;
             }
 
-            ValuesToShow = new Int16[6] { 0, 0, 0, 0, 0, 0};
+            ValuesToShow = new float[6] { 0, 0, 0, 0, 0, 0};
 
         }
 
@@ -149,12 +150,14 @@ namespace GenericBLESensor
             bluetoothLeDevice2?.Dispose();
             bluetoothLeDevice3?.Dispose();
             bluetoothLeDevice4?.Dispose();
+            bluetoothLeDevice5?.Dispose();
             bluetoothLeDevice?.Dispose();
 
             bluetoothLeDevice1 = null;
             bluetoothLeDevice2 = null;
             bluetoothLeDevice3 = null;
             bluetoothLeDevice4 = null;
+            bluetoothLeDevice5 = null;
             return true;
         }
 
@@ -194,6 +197,7 @@ namespace GenericBLESensor
                 //bluetoothLeDevice2 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xecf2a68f51d7);
                 //bluetoothLeDevice3 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xc1816b98161f);
                 bluetoothLeDevice4 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xdea8d0bd1a47);
+                bluetoothLeDevice5 = await BluetoothLEDevice.FromBluetoothAddressAsync(0xfdae919887f4);
 
 
                 if (bluetoothLeDevice1 != null)
@@ -223,6 +227,13 @@ namespace GenericBLESensor
                     if (bluetoothLeDevice4.Name == "Flow Sensor")
                     {
                         bluetoothLeDevice = bluetoothLeDevice4;
+                    }
+                }
+                if (bluetoothLeDevice5 != null)
+                {
+                    if (bluetoothLeDevice5.Name == "Flow Sensor")
+                    {
+                        bluetoothLeDevice = bluetoothLeDevice5;
                     }
                 }
 
@@ -570,15 +581,14 @@ namespace GenericBLESensor
                 //tempValue = (int)((float)(Math.Abs(tempValue) - 854) / 12.992);
                 tempValue = (int)( 2.3991*Math.Exp(0.0018*Math.Abs((float)tempValue)) );
 
-                //if (tempValue < 10)
-                //{
-                //    tempValue = 10;
-                //}
-                //if (tempValue > 100)
-                //{
-                //    tempValue = 100;
-                //}
-
+                if (tempValue < 2)
+                {
+                    tempValue = 0;
+                }
+                if (tempValue > 100)
+                {
+                    tempValue = 100;
+                }
 
 
                 if (flowDatatoShow.Count > 20)
@@ -731,21 +741,24 @@ namespace GenericBLESensor
             // Display the new value with a timestamp.
             Debug.WriteLine(String.Format("Received {0}  {1}  {2}", args.Timestamp, sender, args.CharacteristicValue));
             byte[] data;
-            Int16 newValue;
+            Int16[] newValue = new Int16[2];
             CryptographicBuffer.CopyToByteArray(args.CharacteristicValue, out data);
-            ValuesToShow[0] = newValue = BitConverter.ToInt16(data, 0);
+            ValuesToShow[0] = newValue[0] = BitConverter.ToInt16(data, 0);
+            newValue[1] = BitConverter.ToInt16(data, 2);
+            ValuesToShow[1] = (float)newValue[1] / 100.0f;
 
-            flowDatatoShow.Add(newValue);
+            flowDatatoShow.Add(newValue[0]);
             if (flowDatatoShow.Count > flowDatatoShowMaxNumber)
             {
                 flowDatatoShow.RemoveAt(0);
             }
 
             string strValues = ValuesToShow[0].ToString();
+            string strTemperature = ValuesToShow[1].ToString();
 
             _ = await Task.Run(() => _ = CSVHelperObj.SaveData(newValue, args.Timestamp));
             //var message = $"Value at {DateTime.Now:hh:mm:ss.FFF}: {newValue}";
-            var message = $"Value: {newValue}";
+            var message = $"Value: {strValues}, Temperature: {strTemperature} ";
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal,
                 () => CharacteristicLatestValue.Text = message);
         }
