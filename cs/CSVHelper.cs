@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -21,16 +22,18 @@ namespace GenericBLESensor
         private List<CSVDataFrame> LeftDataReceived;
         private List<CSVDataFrame> RightDataReceived;
         private int Idtag;
-        private int LeftIdtag;
-        private int RightIdtag;
-        private bool FirstLeft;
-        private bool FirstRight;
+        private int LeftIdtag, RightIdtag;
+        private bool FirstLeft, FirstRight;
+        private int FisrtLeftId, FirstRightId;
 
         bool JustRightFoot;
 
         public class CSVDataFrame
         {
             public int Id { get; set; }
+            public int ReceivedId { get; set; }
+            public int ReceivedIdL { get; set; }
+            public int ReceivedIdR { get; set; }
             public long TimeStamp { get; set; }
             public int A { get; set; }
             public int B { get; set; }
@@ -105,61 +108,72 @@ namespace GenericBLESensor
             //.Split(',').Select(int.Parse).ToList();
             CSVDataFrame temp = null;
             //CSVDataFrame temp2 = null;
-            //if (side == "left")
-            //{
-            //    FirstLeft = true;
-
-
-            //    temp = new CSVDataFrame
-            //    {
-            //        Id = LeftIdtag++,
-            //        A = values[0],
-            //        B = values[1],
-            //        C = values[2]
-            //    };
-            //}
-            //else if (side == "right")
-            //{
-            //    FirstRight = true;
-            //    long timestamp = milliseconds.ToUnixTimeMilliseconds();
-            //    temp = new CSVDataFrame
-            //    {
-            //        Id = RightIdtag++,
-            //        TimeStamp = timestamp,
-            //        A = values[0],
-            //        B = values[1],
-            //        C = values[2]
-            //    };
-            //}
-
-            //if (FirstLeft && FirstRight)
-            //{
-            //    if (side == "left")
-            //    {
-            //        LeftDataReceived.Add(temp);
-            //    }
-            //    else if (side == "right")
-            //    {
-            //RightDataReceived.Add(temp);
-            //if (JustRightFoot)
-            //{
-            long timestamp = milliseconds.ToUnixTimeMilliseconds();
-            temp = new CSVDataFrame
+            if (side == "left")
             {
-                Id = RightIdtag++,
-                TimeStamp = timestamp,
-                A = values[0],
-                B = values[1],
-                C = values[2],
-                D = values[3],
-                E = values[4],
-                F = values[5]
-            };
-            DataReceived.Add(temp);
-                //    }
-            //    //}
-            //}
-            return 0;
+                FirstLeft = true;
+                long timestamp = milliseconds.ToUnixTimeMilliseconds();
+                temp = new CSVDataFrame
+                {
+                    Id = LeftIdtag++,
+                    ReceivedId = values[0],
+                    TimeStamp = timestamp,
+                    A = values[1],
+                    B = values[2],
+                    C = values[3]
+                };
+                if (!(FirstLeft && FirstRight))
+                {
+                    FisrtLeftId = values[0];
+                }
+            }
+            else if (side == "right")
+            {
+                FirstRight = true;
+                long timestamp = milliseconds.ToUnixTimeMilliseconds();
+                temp = new CSVDataFrame
+                {
+                    Id = RightIdtag++,
+                    TimeStamp = timestamp,
+                    ReceivedId = values[0],
+                    A = values[1],
+                    B = values[2],
+                    C = values[3]
+                };
+                if (!(FirstLeft && FirstRight))
+                {
+                    FirstRightId = values[0];
+                }
+            }
+
+            if (FirstLeft && FirstRight)
+            {
+                if (side == "left")
+                {
+                    LeftDataReceived.Add(temp);
+                }
+                else if (side == "right")
+                {
+                    RightDataReceived.Add(temp);
+                    //if (JustRightFoot)
+                    //{
+                    //    long timestamp = milliseconds.ToUnixTimeMilliseconds();
+                    //temp = new CSVDataFrame
+                    //{
+                    //    Id = RightIdtag++,
+                    //    TimeStamp = timestamp,
+                    //    A = values[0],
+                    //    B = values[1],
+                    //    C = values[2],
+                    //    D = values[3],
+                    //    E = values[4],
+                    //    F = values[5]
+                    //};
+                    //DataReceived.Add(temp);
+                    //        }
+                    //}
+                }
+            }
+                return 0;
         }
 
         public async Task SaveTempCSVAsync()
@@ -169,12 +183,13 @@ namespace GenericBLESensor
             //{
             //    writer.WriteLine("ID,A,B,C");
             //}
+            int count = LeftDataReceived.Count < RightDataReceived.Count ? LeftDataReceived.Count : RightDataReceived.Count;
 
             //if (LeftDataReceived.Count != RightDataReceived.Count)
             //{
             //    while (LeftDataReceived.Count > RightDataReceived.Count)
             //    {
-            //        LeftDataReceived.RemoveAt(LeftDataReceived.Count - 1 );
+            //        LeftDataReceived.RemoveAt(LeftDataReceived.Count - 1);
             //    }
             //    while (LeftDataReceived.Count < RightDataReceived.Count)
             //    {
@@ -182,21 +197,38 @@ namespace GenericBLESensor
             //    }
             //}
 
-            //for(int i = 0; i < RightDataReceived.Count; i++ )
-            //{
-            //    CSVDataFrame temp = new CSVDataFrame
-            //    {
-            //        Id = i,
-            //        TimeStamp = RightDataReceived[i].TimeStamp,
-            //        A = LeftDataReceived[i].A,
-            //        B = LeftDataReceived[i].B,
-            //        C = LeftDataReceived[i].C,
-            //        D = RightDataReceived[i].A,
-            //        E = RightDataReceived[i].B,
-            //        F = RightDataReceived[i].C,
-            //    };
-            //    DataReceived.Add(temp);
-            //}
+            int kl = 0;
+            int kr = 0;
+
+            for (int i = 0; i < count; i++)
+            {
+                CSVDataFrame temp = new CSVDataFrame
+                {
+                    Id = i,
+                    TimeStamp = RightDataReceived[i-kr].TimeStamp,
+                    ReceivedIdL = LeftDataReceived[i-kl].ReceivedId,
+                    ReceivedIdR = RightDataReceived[i-kr].ReceivedId,
+                    A = LeftDataReceived[i-kl].A,
+                    B = LeftDataReceived[i-kl].B,
+                    C = LeftDataReceived[i-kl].C,
+                    D = RightDataReceived[i-kr].A,
+                    E = RightDataReceived[i-kr].B,
+                    F = RightDataReceived[i-kr].C,
+                };
+                DataReceived.Add(temp);
+
+                if (!(LeftDataReceived[i - kl].ReceivedId + 1 == LeftDataReceived[i - kl + 1].ReceivedId))
+                {
+                    Debug.WriteLine(String.Format("Missing Left {0}", LeftDataReceived[i - kl].ReceivedId + 1));
+                    kl++;
+
+                }
+                if (!(RightDataReceived[i - kr].ReceivedId + 1 == RightDataReceived[i - kr + 1].ReceivedId))
+                {
+                    Debug.WriteLine(String.Format("Missing Left {0}", RightDataReceived[i - kr].ReceivedId + 1));
+                    kr++;
+                }
+            }
 
 
 
@@ -213,9 +245,11 @@ namespace GenericBLESensor
             {
                 fileBody = fileBody + //row.Id.ToString()        + ", " +
                                       row.TimeStamp.ToString() + ", " +
+                                      row.ReceivedIdL.ToString() + ", " +
                                       row.A.ToString()         + ", " +
-                                      row.B.ToString()         + ", " + 
+                                      row.B.ToString()         + ", " +
                                       //row.C.ToString()         + ", " +
+                                      row.ReceivedIdR.ToString() + ", " +
                                       row.D.ToString()         + ", " +
                                       row.E.ToString()         + ", " +
                                       //row.F.ToString()  +
