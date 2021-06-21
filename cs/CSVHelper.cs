@@ -117,7 +117,7 @@ namespace GenericBLESensor
             rootPage.NotifyUser($"Saving to: {pathtofile}", NotifyType.StatusMessage);
             file = await storageFolder.CreateFileAsync(tempFilename + " temp.csv", CreationCollisionOption.ReplaceExisting);
             //await FileIO.WriteTextAsync(file, "ID, A, B, C" + Environment.NewLine);
-            string fileBody = "ID, TimeStamp, Time, Flow" + Environment.NewLine;
+            string fileBody = "ID, TimeStamp, Time, Flow, Temperature" + Environment.NewLine;
             double t = 0.0;
 
 
